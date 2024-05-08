@@ -1,0 +1,75 @@
+Project
+
+OBU - RB
+-  BATMAN(lib)
+	- init
+		- channel
+		- frequency
+		- size of sliding window
+		- ...
+	- connect/disconnect
+	- listNeighbors
+	- getRouteTable
+	- Packet Fowarding
+		- sendPacket
+		- receivePacket
+	- logging
+- Vanetza(lib)
+
+- Decision making algorithm
+
+Emulador
+id
+source/destianation
+vetor_direcao
+destino localizacao
+range
+can_collect_RSU
+
+
+
+
+DashBoard
+
+API
+
+
+--------------------------
+Endpoints
+- /initSimul [POST]
+	- id
+	- ip
+	- channel -> freq
+	- location
+	- speed
+	- interface
+	- nameOfNetwork
+	
+- /infoBoat [GET]
+	- id
+	- mac
+	- interface
+	- ip
+	- status: idle, calcuting route, on mission
+	- neighbors: (mac neighbor, slidWind%)
+	- location
+	- speed
+	- transfered_files
+	- timestamp
+
+- /getLocation [GET]
+	- id
+	- location
+	- speed
+	- direction
+
+	
+- /sensorData [GET]
+	- id
+	- source
+	- destination
+	- size
+	- contentOfFile
+
+	
+	
