@@ -40,12 +40,12 @@ Endpoints
 	- id
 	- ip
 	- channel -> freq
-	- location
+	- locationw
 	- speed
 	- interface
 	- nameOfNetwork
 	
-- /infoBoat [GET]
+- /infoBoat [GET] 
 	- id
 	- mac
 	- interface
