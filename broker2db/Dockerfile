@@ -10,9 +10,6 @@ COPY . .
 # Install Python dependencies
 RUN pip install -r requirements.txt
 
-# Expose the port your application uses (if applicable)
-#EXPOSE 8000
-
 # Specify the command to run your application
-ENTRYPOINT [ "python3", "ok.py" ]
+ENTRYPOINT [ "python3", "main.py" ]
 
