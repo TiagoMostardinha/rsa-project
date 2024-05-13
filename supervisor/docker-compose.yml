@@ -1,0 +1,21 @@
+version: '3.9'
+
+services:
+  mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto:2
+    ports:
+      - 1883
+      - 9001
+    volumes:
+      - ./config:/mosquitto/config
+      - ./config:/mosquitto/data
+  broker2db:
+    container_name: broker2db
+    image: broker2db
+    depends_on:
+      - mosquitto
+
+volumes:
+  config:
+  data:
