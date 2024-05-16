@@ -35,7 +35,7 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker):
 
 if __name__ == "__main__":
     dotenv.load_dotenv("./.env")
-    ipBroker = os.getenv("IP_BROKER")
+    ipBroker = os.getenv("HOST_BROKER")
     portBroker = int(os.getenv("PORT_BROKER"))
     usernameBroker = os.getenv("USERNAME_BROKER")
     passwordBroker = os.getenv("PASSWORD_BROKER")

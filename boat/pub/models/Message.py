@@ -6,7 +6,7 @@ class Message:
     source: str
 
     def __str__(self):
-        return f'{self.content}'
+        return f'{self.source} {self.content}'
 
 
 @dataclass
@@ -15,4 +15,4 @@ class ErrorMessage(Message):
     errorCode: int
 
     def __str__(self):
-        return f'({self.errorVar} {self.errorCode}) {self.content}'
+        return f'({self.errorVar} {self.errorCode}) {self.source} {self.content}'

@@ -4,6 +4,7 @@ from models.Message import *
 import logging
 import json
 
+
 class MQTT:
     id: str
     client: mqtt.Client
@@ -55,6 +56,7 @@ class MQTT:
                 content=f'Disconnected from {self.host}:{self.port}',
                 source='MQTT'
             ))
+            self.client.loop_stop()
         except Exception:
             self.logger.error(msg=ErrorMessage(
                 content=f'Couldnt disconnect from {self.host}:{self.port}',
@@ -111,6 +113,8 @@ class MQTTSubscriber(MQTT):
     def subscribe(self, topics: list[tuple[str, int]]):
         def on_message(client, userdata, msg):
             try:
+                global messages
+
                 data = msg.payload.decode("utf-8")
 
                 m_decode = json.loads(data)
@@ -118,8 +122,8 @@ class MQTTSubscriber(MQTT):
                 self.messages.append(m_decode)
 
                 self.logger.info(msg=Message(
-                content=f'Message received on {msg.topic}: {msg.payload}',
-                source='MQTT'
+                    content=f'Message received on {msg.topic}: {msg.payload}',
+                    source='MQTT'
                 ))
             except Exception:
                 self.logger.error(msg=ErrorMessage(
@@ -135,7 +139,8 @@ class MQTTSubscriber(MQTT):
 
         for topic in topics:
             self.client.subscribe(topic)
-        self.client.loop_forever()
+
+        self.client.loop_start()
 
     def popMessages(self):
         if len(self.messages) == 0:

@@ -1,8 +1,9 @@
 import dotenv
 import os
-from common.mqtt import MQTTSubscriber
+from common.mqtt import MQTTPublisher, MQTTSubscriber
 import logging
 import time
+import json
 
 
 def main(ipBroker, portBroker, usernameBroker, passwordBroker):
@@ -12,9 +13,7 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker):
         datefmt='%H:%M:%S',
     )
 
-    topics = [("test", 0), ("test/pi")]
-
-    sub = MQTTSubscriber(
+    pub = MQTTPublisher(
         host=ipBroker,
         port=portBroker,
         username=usernameBroker,
@@ -22,20 +21,21 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker):
         logger=logging.getLogger(__name__)
     )
 
-    sub.connect()
+    pub.connect()
+    msg = {
+        "temperature": 25,
+        "humidity": 50
+    }
+    pub.publish("test", json.dumps(msg))
+    
 
-    while True:
 
-        sub.subscribe(topics)
-        msg = sub.popMessages()
-
-        if msg:
-            logging.info(f"Received message: {msg}")
+    pub.disconnect()
 
 
 if __name__ == "__main__":
     dotenv.load_dotenv("./.env")
-    ipBroker = os.getenv("IP_BROKER")
+    ipBroker = os.getenv("HOST_BROKER")
     portBroker = int(os.getenv("PORT_BROKER"))
     usernameBroker = os.getenv("USERNAME_BROKER")
     passwordBroker = os.getenv("PASSWORD_BROKER")
