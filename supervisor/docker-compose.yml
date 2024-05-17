@@ -1,0 +1,36 @@
+version: '3.9'
+
+services:
+  mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto:2
+    ports:
+      - 1883
+      - 9001
+    volumes:
+      - ./config/mosquitto:/mosquitto/config
+      - ./config/mosquitto:/mosquitto/data
+  influxdb:
+    image: influxdb
+    container_name: influxdb
+    restart: unless-stopped
+    env_file:
+      - ./config/influxdb/influxdb.env
+    ports:
+      - "8086:8086"
+    volumes:
+      - ./db:/var/lib/influxdb
+  mqtt_influxdb_bridge:
+    container_name: mqtt_influxdb_bridge
+    image: mqtt_influxdb_bridge
+    env_file:
+      - ./config/influxdb/influxdb.env
+    depends_on:
+      - mosquitto
+      - influxdb
+
+
+volumes:
+  config: {}
+  data: {}
+  influxdb: {}
