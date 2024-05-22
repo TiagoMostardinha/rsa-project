@@ -18,16 +18,29 @@ services:
       - ./config/influxdb/influxdb.env
     ports:
       - "8086:8086"
-    volumes:
-      - ./db:/var/lib/influxdb
   mqtt_influxdb_bridge:
     container_name: mqtt_influxdb_bridge
     image: mqtt_influxdb_bridge
-    env_file:
-      - ./config/influxdb/influxdb.env
+    volumes:
+      - ./config/influxdb/influxdb.env:/app/influxdb.env
+      - ./devices.csv:/app/devices.csv
+      - ./.env:/app/.env
     depends_on:
       - mosquitto
       - influxdb
+  controller:
+    container_name: controller
+    image: controller
+    volumes:
+      - ./config/influxdb/influxdb.env:/app/influxdb.env
+      - ./devices.csv:/app/devices.csv
+      - ./map.csv:/app/map.csv
+      - ./.env:/app/.env
+    depends_on:
+      - mosquitto
+      - influxdb
+
+
 
 
 volumes:

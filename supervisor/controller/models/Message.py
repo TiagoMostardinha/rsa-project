@@ -109,3 +109,8 @@ def fromJSON(message) -> BoatMessage:
             transfered_files=message["content"]["transfered_files"]
         )
     )
+
+
+@dataclass
+class ControllerMessage(Message):
+    inRange :bool

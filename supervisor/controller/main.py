@@ -1,6 +1,6 @@
 import dotenv
 import os
-from common.mqtt import MQTTSubscriber
+from common.mqtt import MQTTSubscriber,MQTTPublisher
 from common.database import Database
 import logging
 import csv
@@ -14,12 +14,12 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, hostInfluxDB, por
         datefmt='%H:%M:%S',
     )
 
-    sub = MQTTSubscriber(
+    pub = MQTTPublisher(
         host=ipBroker,
         port=portBroker,
         username=usernameBroker,
         password=passwordBroker,
-        id="mqtt-influxdb-bridge-subscriber",
+        id="controller-publisher",
         logger=logging.getLogger(__name__)
     )
 
@@ -38,24 +38,41 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, hostInfluxDB, por
     with open("./devices.csv", "r") as devices:
         csv_reader = csv.reader(devices, delimiter=",")
         for row in csv_reader:
-            topics.append(f'devices/{row[0]}/out')
+            topics.append(f'devices/{row[0]}/in')
+    
+    # Read Map
+    map = []
+    with open("./map.csv","r") as mapReader:
+        csv_reader = csv.reader(mapReader, delimiter=",")
+
+        for row in csv_reader:
+            line = []
+            for square in row:
+                if square == "o" or square == "x":
+                    line.append(square)
+                else:
+                    logging.error("Invalid map format!")
+                    exit(-1)
+            map.append(line)
+
+    
 
 
     # Connect to MQTT Broker
-    sub.connect()
+    pub.connect()
 
-    # Listens to topics in MQTT Broker
-    sub.subscribe(topics)
+    i = True
+
+
+    
+
 
     while True:
-        # Loop for new message in topics and write in bucket devices
-        for topic in topics:
-            msg = sub.popMessages(topic)
+        if i:
+            i = False
+            pub.publish(topics[0],{"map":map})
 
-            if msg:
-                db.write(topic, msg)
-
-    sub.disconnect()
+    
 
 
 if __name__ == "__main__":

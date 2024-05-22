@@ -59,8 +59,9 @@ class Database:
         return tables
 
     def queryAllDevices(interval):
-        query = f"""from(bucket: "devices")
+        queryTemplate = f"""from(bucket: "devices")
         |> range(start: -{interval}m)"""
+        return query(queryTemplate)
 
     def queryDevice(interval):
         pass
