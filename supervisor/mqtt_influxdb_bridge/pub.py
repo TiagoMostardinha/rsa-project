@@ -1,8 +1,10 @@
 import dotenv
 import os
 from common.mqtt import MQTTPublisher, MQTTSubscriber
-from models.Message import *
 import logging
+from models.Boat import Boat
+from models.Location import Location
+from models.Neighbour import Neighbour
 import time
 import json
 
@@ -26,39 +28,47 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker):
     pub.connect()
 
     msgs = [
-        BoatMessage(
-            source="obu02",
-            destination=View(x=0, y=0),
-            status="active",
-            content=BoatContent(
-                speed=10,
-                direction=0,
-                location=View(x=0, y=0),
-                neighbours=[
-                    Neighbour(name="obu10", distance=10),
-                    Neighbour(name="rsu19", distance=20)
-                ],
-                transfered_files=0
-            )
-        ),
-        BoatMessage(
-            source="rsu19",
-            destination=View(x=4, y=10),
+        Boat(
+            id="rsu19",
             status="idle",
-            content=BoatContent(
-                speed=0,
-                direction=0,
-                location=View(x=4, y=10),
-                neighbours=[
-                    Neighbour(name="obu10", distance=10),
-                    Neighbour(name="obu02", distance=20)
-                ],
-                transfered_files=2
-            ))
+            speed=10,
+            direction=45,
+            location=Location(
+                id="rsu19",
+                x=1,
+                y=1
+            ),
+            destination=Location(
+                id="obu02",
+                x=1,
+                y=1
+            ),
+            neighbours=[
+                Neighbour(
+                    name="rsu20",
+                    tq=10,
+                    tq=Location(
+                        id="rsu20",
+                        x=1,
+                        y=1
+                    )
+                ),
+                Neighbour(
+                    name="rsu21",
+                    tq=10,
+                    location=Location(
+                        id="rsu21",
+                        x=1,
+                        y=1
+                    )
+                )
+            ],
+            transfered_files=["file1", "file2"]
+        )
     ]
 
-    pub.publish(f'devices/{msgs[0].source}/out', toJSON(msgs[0])) 
-    pub.publish(f'devices/{msgs[1].source}/out', toJSON(msgs[1]))
+    for m in msgs:
+        pub.publish(f'devices/{m.id}/out',m.toJSON())
 
     pub.disconnect()
 

@@ -1,7 +1,8 @@
 import influxdb_client
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
-from models.Message import *
+from models.Boat import Boat
+from models.Message import Message
 import logging
 import json
 
@@ -29,21 +30,22 @@ class Database:
     def write(self, topic, data):
         write_api = self.client.write_api(write_options=SYNCHRONOUS)
 
-        data = fromJSON(data)
+        obj = Boat.fromJSON(data)
 
-        if isinstance(data, BoatMessage):
-            point = (
-                Point(data.source)
-                .field("status", data.status)
-                .field("speed", data.content.speed)
-                .field("direction", data.content.direction)
-                .field("location_x", data.content.location.x)
-                .field("location_y", data.content.location.y)
-                .field("transfered_files", data.content.transfered_files)
-                .field("destination_x", data.destination.x)
-                .field("destination_y", data.destination.y)
-                .field("neighbours", str(data.content.neighbours))
-            )
+        point = (
+            Point(obj.id)
+            .field("status", obj.status)
+            .field("speed", obj.speed)
+            .field("direction", obj.direction)
+            .field("location_id", obj.location.id)
+            .field("location_x", obj.location.x)
+            .field("location_y", obj.location.y)
+            .field("destination_id", obj.destination.id)
+            .field("destination_x", obj.destination.x)
+            .field("destination_y", obj.destination.y)
+            .field("neighbours", json.dumps(data["neighbours"]))
+            .field("transfered_files", json.dumps(data["transfered_files"]))
+        )
 
         bucket = topic.split("/")[0]
         write_api.write(bucket=bucket, org=self.org, record=point)
@@ -58,9 +60,10 @@ class Database:
         tables = query_api.query(org=self.org, query=query)
         return tables
 
-    def queryAllDevices(interval):
-        query = f"""from(bucket: "devices")
+    def queryAllDevices(self,interval):
+        queryTemplate = f"""from(bucket: "devices")
         |> range(start: -{interval}m)"""
+        return self.query(queryTemplate)
 
     def queryDevice(interval):
         pass

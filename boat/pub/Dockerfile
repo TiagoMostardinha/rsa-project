@@ -11,5 +11,5 @@ COPY . .
 RUN pip install -r requirements.txt
 
 # Specify the command to run your application
-ENTRYPOINT [ "python3", "pub.py" ]
+ENTRYPOINT [ "python3", "main.py" ]
 

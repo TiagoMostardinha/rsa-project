@@ -1,17 +1,19 @@
 import dotenv
 import os
-from common.mqtt import MQTTSubscriber,MQTTPublisher
+from common.mqtt import MQTTSubscriber, MQTTPublisher
 from common.database import Database
 import logging
 import csv
+import time
 
 
 def main(ipBroker, portBroker, usernameBroker, passwordBroker, hostInfluxDB, portInfluxDB, orgInfluxDB, tokenInfluxDB):
     # Init config for MQTT sub and InfluxDB client
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG,
         format='%(asctime)s %(levelname)s\t%(message)s',
         datefmt='%H:%M:%S',
+
     )
 
     pub = MQTTPublisher(
@@ -31,7 +33,6 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, hostInfluxDB, por
         logger=logging.getLogger(__name__),
     )
 
-
     # Read and create the topics for MQTT
     topics = []
 
@@ -39,10 +40,10 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, hostInfluxDB, por
         csv_reader = csv.reader(devices, delimiter=",")
         for row in csv_reader:
             topics.append(f'devices/{row[0]}/in')
-    
+
     # Read Map
     map = []
-    with open("./map.csv","r") as mapReader:
+    with open("./map.csv", "r") as mapReader:
         csv_reader = csv.reader(mapReader, delimiter=",")
 
         for row in csv_reader:
@@ -55,24 +56,28 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, hostInfluxDB, por
                     exit(-1)
             map.append(line)
 
-    
-
-
     # Connect to MQTT Broker
     pub.connect()
 
-    i = True
+    time.sleep(5)
 
-
-    
-
+    lastMessages = []
 
     while True:
-        if i:
-            i = False
-            pub.publish(topics[0],{"map":map})
+        controllerMsg = db.queryController(5)
 
-    
+        # logging all content from table of influxdb in controllermsg
+        
+
+
+        for msg in controllerMsg:
+
+
+            if msg in lastMessages:
+                continue
+            lastMessages.append(msg)
+
+        time.sleep(10)
 
 
 if __name__ == "__main__":
