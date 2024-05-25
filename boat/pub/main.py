@@ -1,6 +1,6 @@
-from boat.pub.common.batman import Batman
-from models import Location
-from supervisor.controller.models.Boat import Boat
+from common.batman import Batman
+from models.Location import Location
+from models.Boat import Boat
 import time
 
 def main():
