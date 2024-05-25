@@ -2,8 +2,8 @@ import subprocess
 import json
 import csv
 import time
-from models import Neighbour
-from models import Location
+from models.Neighbour import Neighbour
+from models.Location import Location
 
 class Batman():
 
@@ -22,6 +22,8 @@ class Batman():
             print(f"Error: Could not find devices map file '{filename}'.")
         except csv.Error as e:
             print(f"Error: Error parsing devices map file '{filename}': {e}")
+            
+        return devices
 
     def printNeighbours(self, neighbours):
         print(f"Neighbours:")
@@ -33,23 +35,21 @@ class Batman():
             print() 
 
 
-    def get_neighbours(self):  # Interval parameter
-        devices = Batman.get_devices_map()
+    def get_neighbours(self):
+        devices = self.get_devices_map()
         try:
-            command = ["sudo", "batctl", "oj"] 
+            command = ["sudo", "batctl", "oj"]
             completed_process = subprocess.run(command, capture_output=True, text=True)
 
             if completed_process.returncode == 0:
-                # print("Command '{}' executed successfully!".format(" ".join(command)))
-
                 json_string = completed_process.stdout.strip()
                 data = json.loads(json_string)  # Assuming the JSON structure aligns with Neighbour
-
+                #print(data)
                 neighbours = [
                     Neighbour(
                         name=devices.get(network["neigh_address"], network["neigh_address"]),
                         tq=network["tq"],
-                        location=Location.get_location(network["neigh_address"]),  # Assuming location retrieval logic
+                        location=Location(id='0', x=0, y=0),  # Use location from JSON if available, otherwise default
                         last_seen=network["last_seen_msecs"]
                     )
                     for network in data
@@ -62,4 +62,4 @@ class Batman():
 
         except (ValueError, RuntimeError) as e:
             print(f"Error: {e}")
-
+            

@@ -46,7 +46,8 @@ class Boat:
                         "id": n.location.id,
                         "x": n.location.x,
                         "y": n.location.y
-                    }
+                    },
+                    "last_seen": n.last_seen
                 } for n in self.neighbours
             ],
             "transfered_files": [
