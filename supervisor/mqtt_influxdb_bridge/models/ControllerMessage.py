@@ -10,7 +10,6 @@ class ControllerMessage():
     startFlag: bool
     startLocation: Location
     destLocation: Location
-    map: list
     inRange: list       # List of inRange Neighbors
     stopFlag: bool
 
@@ -20,7 +19,6 @@ class ControllerMessage():
             "startFlag": self.startFlag,
             "startLocation": self.startLocation.__json__(),
             "destLocation": self.destLocation.__json__(),
-            "map": self.map,
             "inRange": [d for d in self.inRange],
             "stopFlag": self.stopFlag
         }

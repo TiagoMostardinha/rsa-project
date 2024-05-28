@@ -9,7 +9,7 @@ import csv
 def main(ipBroker, portBroker, usernameBroker, passwordBroker, hostInfluxDB, portInfluxDB, orgInfluxDB, tokenInfluxDB):
     # Init config for MQTT sub and InfluxDB client
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG,
         format='%(asctime)s %(levelname)s\t%(message)s',
         datefmt='%H:%M:%S',
     )

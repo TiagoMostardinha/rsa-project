@@ -11,7 +11,7 @@ import json
 
 def main(ipBroker, portBroker, usernameBroker, passwordBroker):
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG,
         format='%(asctime)s %(levelname)s\t%(message)s',
         datefmt='%H:%M:%S',
     )
@@ -47,7 +47,7 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker):
                 Neighbour(
                     name="rsu20",
                     tq=10,
-                    tq=Location(
+                    location=Location(
                         id="rsu20",
                         x=1,
                         y=1

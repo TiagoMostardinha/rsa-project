@@ -33,7 +33,8 @@ class Database:
         obj = Boat.fromJSON(data)
 
         point = (
-            Point(obj.id)
+            Point("boat")
+            .tag("id", obj.id)
             .field("status", obj.status)
             .field("speed", obj.speed)
             .field("direction", obj.direction)
@@ -55,27 +56,20 @@ class Database:
             source="InfluxDB",
         ))
 
-    def writeControllerMessage(self, topic, data):
+    def writeControllerMessage(self, topic, data: dict):
         write_api = self.client.write_api(write_options=SYNCHRONOUS)
 
-        data = json.loads(data)
+        if data["typeOfMessage"] in ["start", "inrange", "stop"]:
+            point = (
+                Point("controller")
+                .field("typeOfMessage", data.get("typeOfMessage", ""))
+                .field("startFlag", data.get("startFlag", False))
+                .field("startLocation", json.dumps(data.get("startLocation", "")))
+                .field("destLocation", json.dumps(data.get("destLocation", "")))
+                .field("inRange", json.dumps(data.get("inRange", "")))
+                .field("stopFlag", data.get("stopFlag", False))
+            )
 
-        point = Point("controller").field(
-            "typeOfMessage", data["typeOfMessage"])
-
-        if data["typeOfMessage"] == "start":
-            point.field("startFlag", data["startFlag"])
-            point.field("startLocation_id", data["startLocation"]["id"])
-            point.field("startLocation_x", data["startLocation"]["x"])
-            point.field("startLocation_y", data["startLocation"]["y"])
-            point.field("destLocation_id", data["destLocation"]["id"])
-            point.field("destLocation_x", data["destLocation"]["x"])
-            point.field("destLocation_y", data["destLocation"]["y"])
-            point.field("map", json.dumps(data["map"]))
-        elif data["typeOfMessage"] == "inrange":
-            point.field("inRange", json.dumps(data["inRange"]))
-        elif data["typeOfMessage"] == "stop":
-            point.field("stopFlag", data["stopFlag"])
         else:
             self.logger.error(msg=Message(
                 content=f'Invalid typeOfMessage: {data["typeOfMessage"]}',
@@ -104,7 +98,6 @@ class Database:
     def queryController(self, interval):
         queryTemplate = f"""from(bucket: "devices")
         |> range(start: -{interval}m, stop: now())
-        |> sort(columns: ["_value"], desc: true)
-        |> filter(fn: (r) => r._measurement == "controller")
+        |> filter(fn: (r) => r["_measurement"] == "controller")
         """
         return self.query(queryTemplate)

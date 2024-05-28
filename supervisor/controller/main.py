@@ -1,10 +1,11 @@
-import dotenv
-import os
-from common.mqtt import MQTTSubscriber, MQTTPublisher
-from common.database import Database
-import logging
-import csv
 import time
+import csv
+import logging
+import os
+import dotenv
+from common.mqtt import MQTTPublisher
+from common.database import Database
+import common.utils as utils
 
 
 def main(ipBroker, portBroker, usernameBroker, passwordBroker, hostInfluxDB, portInfluxDB, orgInfluxDB, tokenInfluxDB):
@@ -64,20 +65,15 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, hostInfluxDB, por
     lastMessages = []
 
     while True:
-        controllerMsg = db.queryController(5)
+        # Get All messages from 5min interval
+        queryMsg = db.queryController(5)
 
-        # logging all content from table of influxdb in controllermsg
-        
+        newMsgs,lastMessages = utils.processNewMessages(queryMsg,lastMessages)
+
+        logging.info(f"New messages: {newMsgs}")
 
 
-        for msg in controllerMsg:
-
-
-            if msg in lastMessages:
-                continue
-            lastMessages.append(msg)
-
-        time.sleep(10)
+        time.sleep(1)
 
 
 if __name__ == "__main__":
@@ -105,3 +101,5 @@ if __name__ == "__main__":
          orgInfluxDB,
          tokenInfluxDB
          )
+
+

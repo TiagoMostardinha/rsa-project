@@ -13,7 +13,7 @@ from common.database import Database
 
 def main(hostInfluxDB, portInfluxDB, orgInfluxDB, tokenInfluxDB):
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG,
         format='%(asctime)s %(levelname)s\t%(message)s',
         datefmt='%H:%M:%S',
     )
@@ -40,18 +40,6 @@ def main(hostInfluxDB, portInfluxDB, orgInfluxDB, tokenInfluxDB):
                 x=8,
                 y=4,
             ),
-            map=[
-                ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
-                ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
-                ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
-                ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
-                ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
-                ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
-                ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
-                ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
-                ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o"],
-                ["o", "o", "o", "o", "o", "o", "o", "o", "o", "o"]
-            ],
             inRange=None,
             stopFlag=False
         ),
@@ -61,7 +49,6 @@ def main(hostInfluxDB, portInfluxDB, orgInfluxDB, tokenInfluxDB):
             startFlag=False,
             startLocation=None,
             destLocation=None,
-            map=None,
             inRange=["obu2", "rsu19"],
             stopFlag=False
         ),
@@ -71,16 +58,13 @@ def main(hostInfluxDB, portInfluxDB, orgInfluxDB, tokenInfluxDB):
             startFlag=False,
             startLocation=None,
             destLocation=None,
-            map=None,
             inRange=None,
             stopFlag=True
         ),
     ]
 
     for m in msgs:
-        db.writeControllerMessage("devices/controller", json.dumps(m.__json__()))
-
-        time.sleep(1)
+        db.writeControllerMessage("devices/controller", m.__json__())
 
 
 if __name__ == "__main__":
