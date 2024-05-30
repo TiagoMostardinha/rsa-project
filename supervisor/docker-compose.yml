@@ -23,7 +23,7 @@ services:
     image: mqtt_influxdb_bridge
     volumes:
       - ./config/influxdb/influxdb.env:/app/influxdb.env
-      - ./devices.csv:/app/devices.csv
+      - ../devices.csv:/app/devices.csv
       - ./.env:/app/.env
     depends_on:
       - mosquitto
@@ -33,8 +33,8 @@ services:
     image: controller
     volumes:
       - ./config/influxdb/influxdb.env:/app/influxdb.env
-      - ./devices.csv:/app/devices.csv
-      - ./map.csv:/app/map.csv
+      - ../devices.csv:/app/devices.csv
+      - ../map.csv:/app/map.csv
       - ./.env:/app/.env
     depends_on:
       - mosquitto

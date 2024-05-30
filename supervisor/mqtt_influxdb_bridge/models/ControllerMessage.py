@@ -17,9 +17,8 @@ class ControllerMessage():
         return {
             "typeOfMessage": self.typeOfMessage,
             "startFlag": self.startFlag,
-            "startLocation": self.startLocation.__json__(),
-            "destLocation": self.destLocation.__json__(),
-            "inRange": [d for d in self.inRange],
+            "startLocation": self.startLocation.__json__() if self.startLocation else None,
+            "destLocation": self.destLocation.__json__() if self.destLocation else None,
+            "inRange": self.inRange,
             "stopFlag": self.stopFlag
         }
-

@@ -40,6 +40,7 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, hostInfluxDB, por
         for row in csv_reader:
             topics.append(f'devices/{row[0]}/out')
 
+    topics.append(f'controller/{row[0]}/out')
 
     # Connect to MQTT Broker
     sub.connect()
@@ -53,7 +54,7 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, hostInfluxDB, por
             msg = sub.popMessages(topic)
 
             if msg:
-                db.write(topic, msg)
+                db.writeBoat(topic, msg)
 
     sub.disconnect()
 

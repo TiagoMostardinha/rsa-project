@@ -90,9 +90,10 @@ class Database:
         tables = query_api.query(org=self.org, query=query)
         return tables
 
-    def queryAllDevices(self, interval):
+    def queryDevices(self, interval):
         queryTemplate = f"""from(bucket: "devices")
-        |> range(start: -{interval}m)"""
+        |> range(start: -{interval}m, stop: now())
+        |> filter(fn: (r) => r["id"] =~ /rsu|obu/)"""
         return self.query(queryTemplate)
 
     def queryController(self, interval):

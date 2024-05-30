@@ -79,7 +79,8 @@ class Boat:
                         id=n["location"]["id"],
                         x=n["location"]["x"],
                         y=n["location"]["y"],
-                    )
+                    ),
+                    last_seen=n["last_seen"]
                 ) for n in message["neighbours"]
             ],
             transfered_files=message["transfered_files"]

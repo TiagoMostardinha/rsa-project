@@ -6,6 +6,8 @@ import dotenv
 from common.mqtt import MQTTPublisher
 from common.database import Database
 import common.utils as utils
+from models.ControllerMessage import ControllerMessage
+from models.Boat import Boat
 
 
 def main(ipBroker, portBroker, usernameBroker, passwordBroker, hostInfluxDB, portInfluxDB, orgInfluxDB, tokenInfluxDB):
@@ -34,16 +36,23 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, hostInfluxDB, por
         logger=logging.getLogger(__name__),
     )
 
-    # Read and create the topics for MQTT
-    topics = []
+    # Range of floater and boats
+    rangeOfDevices = 5
 
-    with open("./devices.csv", "r") as devices:
-        csv_reader = csv.reader(devices, delimiter=",")
+    # Read and create the topics for MQTT
+    devices = {}
+
+    with open("./devices.csv", "r") as devicesFile:
+        csv_reader = csv.reader(devicesFile, delimiter=",")
         for row in csv_reader:
-            topics.append(f'devices/{row[0]}/in')
+            devices[row[0]] = {
+                "id": row[0],
+                "device": None,
+                "topic": f'devices/{row[0]}/in',
+            }
 
     # Read Map
-    map = []
+    originalMap = []
     with open("./map.csv", "r") as mapReader:
         csv_reader = csv.reader(mapReader, delimiter=",")
 
@@ -55,7 +64,9 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, hostInfluxDB, por
                 else:
                     logging.error("Invalid map format!")
                     exit(-1)
-            map.append(line)
+            originalMap.append(line)
+
+    map = originalMap.copy()
 
     # Connect to MQTT Broker
     pub.connect()
@@ -65,13 +76,53 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, hostInfluxDB, por
     lastMessages = []
 
     while True:
-        # Get All messages from 5min interval
-        queryMsg = db.queryController(5)
+        newMsgs, lastMessages = utils.getNewMessages(lastMessages, db)
 
-        newMsgs,lastMessages = utils.processNewMessages(queryMsg,lastMessages)
+        if len(newMsgs) <= 0:
+            continue
 
         logging.info(f"New messages: {newMsgs}")
 
+        # Process messages
+        for msg in newMsgs:
+            if isinstance(msg, Boat):
+                if devices[msg.id]["device"] != None:
+                    map[devices[msg.id]["device"].location.y][devices[msg.id]
+                                                              ["device"].location.x] = "o"
+                devices[msg.id]["device"] = msg
+                if "obu" in msg.id:
+                    map[msg.location.y][msg.location.x] = "b"
+                if "rsu" in msg.id:
+                    map[msg.location.y][msg.location.x] = "f"
+
+            if isinstance(msg, ControllerMessage):
+                if msg.typeOfMessage == "start":
+                    pub.publish(devices[msg.startLocation.id]
+                            ["topic"], msg.__json__())
+                if msg.typeOfMessage == "stop":
+                    for dev in devices.values():
+                        pub.publish(dev["topic"], msg.__json__())
+
+
+        for id, dev in devices.items():
+            if "rsu" not in id or not dev["device"]:
+                continue
+            for i, d in devices.items():
+                if "rsu" in i or not d["device"]:
+                    continue
+                if (abs(dev["device"].location.x - d["device"].location.x) <= rangeOfDevices
+                        or abs(dev["device"].location.y - d["device"].location.y) <= rangeOfDevices):
+                    controllerMsg = ControllerMessage(
+                        typeOfMessage="inrange",
+                        startFlag=False,
+                        startLocation=None,
+                        destLocation=None,
+                        inRange=[id,i],
+                        stopFlag=False
+                    )
+                    pub.publish(dev["topic"],controllerMsg.__json__())
+                    pub.publish(d["topic"],controllerMsg.__json__())
+                    
 
         time.sleep(1)
 
@@ -101,5 +152,3 @@ if __name__ == "__main__":
          orgInfluxDB,
          tokenInfluxDB
          )
-
-

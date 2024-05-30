@@ -1,6 +1,5 @@
 import heapq
 from typing import List, Dict, Tuple
-import time
 
 
 def mapToGraph(map):

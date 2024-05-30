@@ -121,7 +121,7 @@ class MQTTSubscriber(MQTT):
                 global messages
 
                 data = msg.payload.decode("utf-8")
-
+                
                 m_decode = json.loads(data)
 
                 self.messages[msg.topic].append(m_decode)

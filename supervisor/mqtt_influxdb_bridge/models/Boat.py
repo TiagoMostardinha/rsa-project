@@ -32,12 +32,12 @@ class Boat:
                 "id": self.location.id,
                 "x": self.location.x,
                 "y": self.location.y
-            },
+            } if self.location else "",
             "destination": {
                 "id": self.destination.id,
                 "x": self.destination.x,
                 "y": self.destination.y
-            },
+            }if self.destination else "",
             "neighbours": [
                 {
                     "name": n.name,
@@ -46,7 +46,8 @@ class Boat:
                         "id": n.location.id,
                         "x": n.location.x,
                         "y": n.location.y
-                    }
+                    },
+                    "last_seen": n.last_seen
                 } for n in self.neighbours
             ],
             "transfered_files": [
@@ -78,7 +79,8 @@ class Boat:
                         id=n["location"]["id"],
                         x=n["location"]["x"],
                         y=n["location"]["y"],
-                    )
+                    ),
+                    last_seen=n["last_seen"]
                 ) for n in message["neighbours"]
             ],
             transfered_files=message["transfered_files"]

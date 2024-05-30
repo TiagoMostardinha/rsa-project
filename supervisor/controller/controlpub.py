@@ -1,12 +1,9 @@
 import dotenv
 import os
-from common.mqtt import MQTTPublisher, MQTTSubscriber
 import logging
 from models.Boat import Boat
 from models.Location import Location
 from models.Neighbour import Neighbour
-import time
-import json
 from models.ControllerMessage import ControllerMessage
 from common.database import Database
 
@@ -31,28 +28,18 @@ def main(hostInfluxDB, portInfluxDB, orgInfluxDB, tokenInfluxDB):
             typeOfMessage="start",
             startFlag=True,
             startLocation=Location(
-                id="obu2",
-                x=1,
-                y=1
+                id="obu02",
+                x=0,
+                y=0
             ),
             destLocation=Location(
                 id="rsu19",
-                x=8,
-                y=4,
+                x=28,
+                y=18,
             ),
             inRange=None,
             stopFlag=False
         ),
-
-        ControllerMessage(
-            typeOfMessage="inrange",
-            startFlag=False,
-            startLocation=None,
-            destLocation=None,
-            inRange=["obu2", "rsu19"],
-            stopFlag=False
-        ),
-
         ControllerMessage(
             typeOfMessage="stop",
             startFlag=False,
