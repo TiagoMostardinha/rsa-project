@@ -6,6 +6,7 @@ from models.Location import Location
 from models.Neighbour import Neighbour
 from models.ControllerMessage import ControllerMessage
 from common.database import Database
+import time
 
 
 def main(hostInfluxDB, portInfluxDB, orgInfluxDB, tokenInfluxDB):
@@ -40,18 +41,44 @@ def main(hostInfluxDB, portInfluxDB, orgInfluxDB, tokenInfluxDB):
             inRange=None,
             stopFlag=False
         ),
+        # ControllerMessage(
+        #     typeOfMessage="start",
+        #     startFlag=True,
+        #     startLocation=Location(
+        #         id="obu10",
+        #         x=5,
+        #         y=0
+        #     ),
+        #     destLocation=Location(
+        #         id="rsu19",
+        #         x=28,
+        #         y=18,
+        #     ),
+        #     inRange=None,
+        #     stopFlag=False
+        # ),
         ControllerMessage(
-            typeOfMessage="stop",
-            startFlag=False,
-            startLocation=None,
-            destLocation=None,
+            typeOfMessage="start",
+            startFlag=True,
+            startLocation=Location(
+                id="rsu19",
+                x=28,
+                y=18
+            ),
+            destLocation=Location(
+                id="rsu19",
+                x=28,
+                y=18,
+            ),
             inRange=None,
-            stopFlag=True
+            stopFlag=False
         ),
+        
     ]
 
     for m in msgs:
         db.writeControllerMessage("devices/controller", m.__json__())
+        time.sleep(1)
 
 
 if __name__ == "__main__":

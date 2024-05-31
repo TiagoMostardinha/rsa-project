@@ -23,6 +23,27 @@ class Boat:
         self.transfered_files = transfered_files
 
     def toJSON(self) -> dict:
+        neighbours = None
+        if self.neighbours is not None:
+            neighbours = [
+                {
+                    "name": n.name,
+                    "tq": n.tq,
+                    "location": {
+                        "id": n.location.id,
+                        "x": n.location.x,
+                        "y": n.location.y
+                    },
+                    "last_seen": n.last_seen
+                } for n in self.neighbours
+            ]
+        
+        transfered_files = None
+        if self.transfered_files is not None:
+            transfered_files = [
+                f for f in self.transfered_files
+            ]
+
         return {
             "id": self.id,
             "status": self.status,
@@ -38,20 +59,8 @@ class Boat:
                 "x": self.destination.x,
                 "y": self.destination.y
             },
-            "neighbours": [
-                {
-                    "name": n.name,
-                    "tq": n.tq,
-                    "location": {
-                        "id": n.location.id,
-                        "x": n.location.x,
-                        "y": n.location.y
-                    }
-                } for n in self.neighbours
-            ],
-            "transfered_files": [
-                f for f in self.transfered_files
-            ] 
+            "neighbours": neighbours,
+            "transfered_files": transfered_files
         }
 
     def fromJSON(message):
@@ -78,7 +87,8 @@ class Boat:
                         id=n["location"]["id"],
                         x=n["location"]["x"],
                         y=n["location"]["y"],
-                    )
+                    ),
+                    last_seen=n["last_seen"]
                 ) for n in message["neighbours"]
             ],
             transfered_files=message["transfered_files"]

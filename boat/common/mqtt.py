@@ -9,11 +9,11 @@ class MQTT:
     id: str
     client: mqtt.Client
 
-    def __init__(self, host: str, port: int, username: str, password: str, logger: logging.Logger):
+    def __init__(self, host: str, port: int, username: str, password: str, id: str, logger: logging.Logger):
         self.host = host
         self.port = port
 
-        self.id = f'python-mqtt-{random.randint(0, 1000)}'
+        self.id = id
 
         self.client = mqtt.Client(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
@@ -68,29 +68,33 @@ class MQTT:
 
 
 class MQTTPublisher(MQTT):
-    def __init__(self, host: str, port: int, username: str, password: str, logger: logging.Logger):
+    def __init__(self, host: str, port: int, username: str, password: str, id: str, logger: logging.Logger):
         super().__init__(
             host,
             port,
             username,
             password,
+            id,
             logger
         )
 
-    def publish(self, topic: str, message: str):
+    def publish(self, topic: str, message: dict):
         try:
+
+            message = json.dumps(message)
+
             rs = self.client.publish(topic, message)
 
             if rs[0] != 0:
-                raise Exception("Couldn't publish message on MQTT Broker")
+                raise Exception(f"Couldn't publish message on MQTT Broker : {rs[0]}")
 
             self.logger.info(msg=Message(
                 content=f'Message published on {topic}: {message}',
                 source='MQTT'
             ))
-        except Exception:
+        except Exception as e: 
             self.logger.error(msg=ErrorMessage(
-                content=f'Couldnt publish message on {topic}: {message}',
+                content=f'Couldnt publish message on {topic}: {e}',
                 source='MQTT',
                 errorVar='rc',
                 errorCode=500,
@@ -99,14 +103,15 @@ class MQTTPublisher(MQTT):
 
 
 class MQTTSubscriber(MQTT):
-    messages = []
+    messages = {}
 
-    def __init__(self, host: str, port: int, username: str, password: str, logger: logging.Logger):
+    def __init__(self, host: str, port: int, username: str, password: str, id: str, logger: logging.Logger):
         super().__init__(
             host,
             port,
             username,
             password,
+            id,
             logger
         )
 
@@ -119,7 +124,7 @@ class MQTTSubscriber(MQTT):
 
                 m_decode = json.loads(data)
 
-                self.messages.append(m_decode)
+                self.messages[msg.topic].append(m_decode)
 
                 self.logger.info(msg=Message(
                     content=f'Message received on {msg.topic}: {msg.payload}',
@@ -131,18 +136,16 @@ class MQTTSubscriber(MQTT):
                     source='MQTT',
                 ))
 
-        self.logger.info(msg=Message(
-            content=f'Subscribing to {topics}',
-            source='MQTT'
-        ))
         self.client.on_message = on_message
 
         for topic in topics:
-            self.client.subscribe(topic)
+            logging.info(topic)
+            self.client.subscribe((topic, 0))
+            self.messages[topic] = []
 
         self.client.loop_start()
 
-    def popMessages(self):
-        if len(self.messages) == 0:
+    def popMessages(self, topic):
+        if len(self.messages[topic]) == 0:
             return None
-        return self.messages.pop()
+        return self.messages[topic].pop()

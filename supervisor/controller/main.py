@@ -69,7 +69,6 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, hostInfluxDB, por
     map = originalMap.copy()
 
     # Connect to MQTT Broker
-    pub.connect()
 
     time.sleep(5)
 
@@ -96,19 +95,22 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, hostInfluxDB, por
                     map[msg.location.y][msg.location.x] = "f"
 
             if isinstance(msg, ControllerMessage):
+                pub.connect()
                 if msg.typeOfMessage == "start":
                     pub.publish(devices[msg.startLocation.id]
                             ["topic"], msg.__json__())
                 if msg.typeOfMessage == "stop":
                     for dev in devices.values():
                         pub.publish(dev["topic"], msg.__json__())
+                pub.disconnect()
 
 
         for id, dev in devices.items():
-            if "rsu" not in id or not dev["device"]:
+                
+            if "rsu" not in id or not dev["device"] or dev["device"].location.x < 0 or dev["device"].location.y < 0:
                 continue
             for i, d in devices.items():
-                if "rsu" in i or not d["device"]:
+                if "rsu" in i or not d["device"] or d["device"].location.x < 0 or d["device"].location.y < 0:
                     continue
                 if (abs(dev["device"].location.x - d["device"].location.x) <= rangeOfDevices
                         or abs(dev["device"].location.y - d["device"].location.y) <= rangeOfDevices):
@@ -120,8 +122,10 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, hostInfluxDB, por
                         inRange=[id,i],
                         stopFlag=False
                     )
+                    pub.connect()
                     pub.publish(dev["topic"],controllerMsg.__json__())
                     pub.publish(d["topic"],controllerMsg.__json__())
+                    pub.disconnect()
                     
 
         time.sleep(1)
