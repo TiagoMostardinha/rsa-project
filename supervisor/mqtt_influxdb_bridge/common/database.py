@@ -35,6 +35,7 @@ class Database:
         point = (
             Point("boat")
             .tag("id", obj.id)
+            .field("mac", obj.mac)
             .field("status", obj.status)
             .field("speed", obj.speed)
             .field("direction", obj.direction)
@@ -63,11 +64,7 @@ class Database:
             point = (
                 Point("controller")
                 .field("typeOfMessage", data.get("typeOfMessage", ""))
-                .field("startFlag", data.get("startFlag", False))
-                .field("startLocation", json.dumps(data.get("startLocation", "")))
-                .field("destLocation", json.dumps(data.get("destLocation", "")))
                 .field("inRange", json.dumps(data.get("inRange", "")))
-                .field("stopFlag", data.get("stopFlag", False))
             )
 
         else:

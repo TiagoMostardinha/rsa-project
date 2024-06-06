@@ -9,6 +9,7 @@ from models.ControllerMessage import ControllerMessage
 from models.Boat import Boat
 from common.dijkstra import *
 from models.Location import Location
+from common.batman import Batman
 import time
 import csv
 
@@ -36,6 +37,7 @@ def csvToMap(file):
 def main(ipBroker, portBroker, usernameBroker, passwordBroker):
     boat = Boat(
         id="obu02",
+        mac="",
         status="idle",
         speed=0,
         direction=0,
@@ -90,14 +92,21 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker):
     with open("./devices.csv", "r") as devices:
         csv_reader = csv.reader(devices, delimiter=",")
         for row in csv_reader:
-            continue
+            if row[0] == boat.id:
+                boat.location.x = int(row[2])
+                boat.location.y = int(row[3])
+                boat.destination.x = int(row[4])
+                boat.destination.y = int(row[5])
+
+
+    # TODO: get mac from batman
 
     sub.connect()
     sub.subscribe(topics["in"])
 
     startFlag = False
     inRange = False
-    startPosition = ()
+    startPosition = (boat.location.x,boat.location.y)
 
     path = []
 
@@ -105,6 +114,7 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker):
 
     while True:
         time.sleep(1)
+
 
         if i > 10:
             sub.disconnect()
@@ -123,12 +133,6 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker):
             if msg:
                 if msg['typeOfMessage'] == "start":
                     startFlag = True
-                    boat.location.id = msg['startLocation']['id']
-                    boat.location.x = int(msg['startLocation']['x'])
-                    boat.location.y = int(msg['startLocation']['y'])
-                    boat.destination.id = msg['destLocation']['id']
-                    boat.destination.x = int(msg['destLocation']['x'])
-                    boat.destination.y = int(msg['destLocation']['y'])
                     boat.status = "moving"
                     startPosition = (boat.location.x, boat.location.y)
                     graph = mapToGraph(map)
@@ -148,7 +152,7 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker):
         if not startFlag:
             continue
 
-        if len(path) == 0:
+        if len(path) <= 0:
             continue
 
         coord = path.pop(0)
@@ -160,6 +164,12 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker):
 
         if not inRange:
             continue
+        
+        # TODO: open socket with rsu
+
+        # if tq < 210:
+        # if tq > 240:
+        # if tq < 200: find new path
 
         logging.info("In range")
 

@@ -27,51 +27,15 @@ def main(hostInfluxDB, portInfluxDB, orgInfluxDB, tokenInfluxDB):
     msgs = [
         ControllerMessage(
             typeOfMessage="start",
-            startFlag=True,
-            startLocation=Location(
-                id="obu02",
-                x=0,
-                y=0
-            ),
-            destLocation=Location(
-                id="rsu19",
-                x=28,
-                y=18,
-            ),
             inRange=None,
-            stopFlag=False
         ),
-        # ControllerMessage(
-        #     typeOfMessage="start",
-        #     startFlag=True,
-        #     startLocation=Location(
-        #         id="obu10",
-        #         x=5,
-        #         y=0
-        #     ),
-        #     destLocation=Location(
-        #         id="rsu19",
-        #         x=28,
-        #         y=18,
-        #     ),
-        #     inRange=None,
-        #     stopFlag=False
-        # ),
         ControllerMessage(
-            typeOfMessage="start",
-            startFlag=True,
-            startLocation=Location(
-                id="rsu19",
-                x=28,
-                y=18
-            ),
-            destLocation=Location(
-                id="rsu19",
-                x=28,
-                y=18,
-            ),
+            typeOfMessage="stop",
             inRange=None,
-            stopFlag=False
+        ),
+        ControllerMessage(
+            typeOfMessage="inrange",
+            inRange=["rsu19","obu02"],
         ),
         
     ]

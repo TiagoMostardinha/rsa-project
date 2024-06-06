@@ -4,6 +4,7 @@ from models.Neighbour import Neighbour
 
 class Boat:
     id: str
+    mac: str
     status: str
     speed: int
     direction: int
@@ -12,8 +13,9 @@ class Boat:
     neighbours: list
     transfered_files: list[str]
 
-    def __init__(self, id, status, speed, direction, location, neighbours, destination, transfered_files):
+    def __init__(self, id,mac, status, speed, direction, location, neighbours, destination, transfered_files):
         self.id = id
+        self.mac = mac
         self.status = status
         self.speed = speed
         self.direction = direction
@@ -25,6 +27,7 @@ class Boat:
     def toJSON(self) -> dict:
         return {
             "id": self.id,
+            "mac": self.mac,
             "status": self.status,
             "speed": self.speed,
             "direction": self.direction,
@@ -41,6 +44,7 @@ class Boat:
             "neighbours": [
                 {
                     "name": n.name,
+                    "mac": n.mac,
                     "tq": n.tq,
                     "location": {
                         "id": n.location.id,
@@ -58,6 +62,7 @@ class Boat:
     def fromJSON(message):
         return Boat(
             id=message["id"],
+            mac=message["mac"],
             status=message["status"],
             speed=message["speed"],
             direction=message["direction"],
@@ -74,6 +79,7 @@ class Boat:
             neighbours=[
                 Neighbour(
                     name=n["name"],
+                    mac=n["mac"],
                     tq=n["tq"],
                     location=Location(
                         id=n["location"]["id"],

@@ -4,7 +4,7 @@ from models.Location import Location
 from models.Boat import Boat
 
 
-def getNewMessages(lastMessages,database):
+def getNewMessages(lastMessages, database):
     # Get All messages from 20min interval
     controllerMsgs = database.queryController(20)
     devicesMessages = database.queryDevices(20)
@@ -19,7 +19,7 @@ def getNewMessages(lastMessages,database):
     newMsgs.extend(controllerMsgs)
     newMsgs.extend(devicesMsgs)
 
-    return newMsgs,lastMessages
+    return newMsgs, lastMessages
 
 
 def getControllerMessages(queryMsg, lastMessages):
@@ -45,27 +45,6 @@ def getControllerMessages(queryMsg, lastMessages):
 
     for msg in newMsgs:
 
-        if str(msg['startLocation']) == 'null':
-            startLocation = None
-
-        else:
-            aux = json.loads(msg['startLocation'])
-            startLocation = Location(
-                aux['id'],
-                aux['x'],
-                aux['y']
-            )
-
-        if str(msg['destLocation']) == 'null':
-            destLocation = None
-        else:
-            aux = json.loads(msg['destLocation'])
-            destLocation = Location(
-                aux['id'],
-                aux['x'],
-                aux['y']
-            )
-
         if str(msg['inRange']) == 'null':
             inRange = None
         else:
@@ -73,11 +52,7 @@ def getControllerMessages(queryMsg, lastMessages):
 
         controllerMsg = ControllerMessage(
             typeOfMessage=msg['typeOfMessage'],
-            startFlag=msg['startFlag'],
-            startLocation=startLocation,
-            destLocation=destLocation,
             inRange=inRange,
-            stopFlag=msg['stopFlag'],
         )
         msgsToReturn.append(controllerMsg)
 
@@ -109,6 +84,7 @@ def getDevicesMessages(queryMsg, lastMessages):
     for msg in newMsgs:
         boatMsg = {
             "id": msg['id'],
+            "mac": msg['mac'],
             "status": msg['status'],
             "speed": msg['speed'],
             "direction": msg['direction'],
@@ -129,4 +105,3 @@ def getDevicesMessages(queryMsg, lastMessages):
         msgsToReturn.append(boatMsg)
 
     return msgsToReturn, lastMessages
-

@@ -97,7 +97,8 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, hostInfluxDB, por
             if isinstance(msg, ControllerMessage):
                 pub.connect()
                 if msg.typeOfMessage == "start":
-                    pub.publish(devices[msg.startLocation.id]
+                    for dev in devices.keys():
+                        pub.publish(devices[dev]
                             ["topic"], msg.__json__())
                 if msg.typeOfMessage == "stop":
                     for dev in devices.values():
@@ -116,11 +117,7 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, hostInfluxDB, por
                         or abs(dev["device"].location.y - d["device"].location.y) <= rangeOfDevices):
                     controllerMsg = ControllerMessage(
                         typeOfMessage="inrange",
-                        startFlag=False,
-                        startLocation=None,
-                        destLocation=None,
                         inRange=[id,i],
-                        stopFlag=False
                     )
                     pub.connect()
                     pub.publish(dev["topic"],controllerMsg.__json__())

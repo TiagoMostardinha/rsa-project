@@ -30,6 +30,7 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker):
         Boat(
             id="obu02",
             status="idle",
+            mac="00:00:00:00:00:00",
             speed=10,
             direction=45,
             location=Location(
@@ -46,6 +47,7 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker):
                 Neighbour(
                     name="rsu20",
                     tq=10,
+                    mac="00:00:00:00:00:00",
                     location=Location(
                         id="rsu20",
                         x=1,
@@ -56,6 +58,7 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker):
                 Neighbour(
                     name="rsu21",
                     tq=10,
+                    mac="00:00:00:00:00:00",
                     location=Location(
                         id="rsu21",
                         x=1,
@@ -69,6 +72,7 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker):
         ),
         Boat(
             id="obu02",
+            mac="00:00:00:00:00:00",
             status="idle",
             speed=10,
             direction=45,
@@ -86,6 +90,7 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker):
                 Neighbour(
                     name="rsu20",
                     tq=10,
+                    mac="00:00:00:00:00:00",
                     location=Location(
                         id="rsu20",
                         x=1,
@@ -96,6 +101,7 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker):
                 Neighbour(
                     name="rsu21",
                     tq=10,
+                    mac="00:00:00:00:00:00",
                     location=Location(
                         id="rsu21",
                         x=1,
@@ -110,6 +116,7 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker):
         Boat(
             id="rsu19",
             status="idle",
+            mac="00:00:00:00:00:00",
             speed=0,
             direction=0,
             location=Location(
@@ -126,6 +133,7 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker):
                 Neighbour(
                     name="obu02",
                     tq=10,
+                    mac="00:00:00:00:00:00",
                     location=Location(
                         id="obu02",
                         x=1,
@@ -136,6 +144,7 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker):
                 Neighbour(
                     name="obu10",
                     tq=10,
+                    mac="00:00:00:00:00:00",
                     location=Location(
                         id="obu10",
                         x=1,
