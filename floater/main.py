@@ -4,55 +4,23 @@ import logging
 import os
 import dotenv
 from common.mqtt import MQTTPublisher, MQTTSubscriber
-import common.utils as utils
-from models.ControllerMessage import ControllerMessage
-from models.Boat import Boat
-from common.dijkstra import *
+from models.Floater import Floater
 from models.Location import Location
+from common.socketAPI import *
+from scapy.all import get_if_hwaddr
 import time
 import csv
 
 
-def csvToMap(file):
-    map = []
-    freeSpace = 0
-    with open(file, "r") as mapReader:
-        csv_reader = csv.reader(mapReader, delimiter=",")
-
-        for row in csv_reader:
-            line = []
-            for square in row:
-                if square == "o" or square == "x":
-                    if square == "o":
-                        freeSpace += 1
-                    line.append(square)
-                else:
-                    raise Exception("Invalid map format!")
-            map.append(line)
-
-    return map, freeSpace
-
-
-def main(ipBroker, portBroker, usernameBroker, passwordBroker):
-    boat = Boat(
-        id="rsu19",
+def main(ipBroker, portBroker, usernameBroker, passwordBroker, host_id):
+    floater = Floater(
+        id=host_id,
+        mac="",
         status="idle",
-        speed=0,
-        direction=0,
-        location=Location(
-            id="rsu19",
-            x=-1,
-            y=-1
-        ),
-        destination=Location(
-            id="rsu19",
-            x=-1,
-            y=-1
-        ),
-        neighbours=[],
-        transfered_files=[]
+        location=Location(host_id, -1, -1),
+        files_to_tranfer=["rsu19_f1.txt", "rsu19_f2.txt"],
     )
-    # Init config for MQTT sub and InfluxDB client
+
     logging.basicConfig(
         level=logging.DEBUG,
         format='%(asctime)s %(levelname)s\t%(message)s',
@@ -78,73 +46,70 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker):
         logger=logging.getLogger(__name__)
     )
 
-    # Read Map
-    map, freeSpace = csvToMap("map.csv")
+    floater.mac = get_if_hwaddr("bat0")
 
     # Read and create the topics for MQTT
     topics = {}
 
-    topics["in"] = [f'devices/{boat.id}/in']
-    topics["out"] = [f'devices/{boat.id}/out']
+    topics["in"] = [f'devices/{floater.id}/in']
+    topics["out"] = [f'devices/{floater.id}/out']
 
     with open("./devices.csv", "r") as devices:
         csv_reader = csv.reader(devices, delimiter=",")
         for row in csv_reader:
-            continue
+            if row[0] == floater.id:
+                floater.location.x = int(row[1])
+                floater.location.y = int(row[2])
 
     sub.connect()
     sub.subscribe(topics["in"])
 
     startFlag = False
+    stopFlag = False
     inRange = False
-    startPosition = ()
 
-    path = []
-
-    i = 0
+    lastMessage = None
 
     while True:
-        time.sleep(1)
+        # TODO: get messages from MQTT
+        msg = sub.popMessages(topics["in"][0])
 
-        if i > 10:
-            sub.disconnect()
-            pub.connect()
-            pub.publish(topics["out"][0], boat.toJSON())
-            pub.disconnect()
-            sub.connect()
-            i = 0
+        if msg is None:
             continue
-        else:
-            i += 1
 
-        for topic in topics["in"]:
-            msg = sub.popMessages(topic)
+        if msg["typeOfMessage"] == "start":
+            startFlag = True
 
-            if msg:
-                if msg['typeOfMessage'] == "start":
-                    startFlag = True
-                    boat.location.id = msg['startLocation']['id']
-                    boat.location.x = int(msg['startLocation']['x'])
-                    boat.location.y = int(msg['startLocation']['y'])
-                    boat.destination.id = msg['destLocation']['id']
-                    boat.destination.x = int(msg['destLocation']['x'])
-                    boat.destination.y = int(msg['destLocation']['y'])
-                    boat.status = "idle"
-                if msg['typeOfMessage'] == "stop":
-                    startFlag = False
-                    boat.status = "idle"
-                    path = []
-                if msg['typeOfMessage'] == "inRange":
-                    if boat.id in msg['inrange']:
-                        inRange = True
+        if msg["typeOfMessage"] == "stop":
+            stopFlag = True
+
+        if msg["typeOfMessage"] == "inrange":
+            floater.status = "exchange"
+            inRange = True
 
         if not startFlag:
             continue
 
-        if not inRange:
+        if stopFlag:
+            return
+
+        pub.connect()
+        pub.publish(topics["out"][0], floater.toJSON())
+        pub.disconnect()
+        time.sleep(1)
+
+        if msg == lastMessage:
             continue
 
-        logging.info("In range")
+        if inRange:
+            logging.info("Sending files to the server")
+            socket = SocketAPI(10119, '', logging.getLogger(__name__))
+            socket.socketServer(floater.files_to_tranfer)
+            inRange = False
+            floater.status = "idle"
+            lastMessage = msg
+
+        
 
 
 if __name__ == "__main__":
@@ -155,9 +120,11 @@ if __name__ == "__main__":
     portBroker = int(os.getenv("PORT_BROKER"))
     usernameBroker = os.getenv("USERNAME_BROKER")
     passwordBroker = os.getenv("PASSWORD_BROKER")
+    host_id = os.getenv("HOST_ID")
 
     main(hostBroker,
          portBroker,
          usernameBroker,
          passwordBroker,
+         host_id
          )

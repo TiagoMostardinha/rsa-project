@@ -6,6 +6,7 @@ import logging
 from models.Boat import Boat
 from models.Location import Location
 from models.Neighbour import Neighbour
+from models.Floater import Floater
 
 
 def main(ipBroker, portBroker, usernameBroker, passwordBroker):
@@ -113,49 +114,19 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker):
             ],
             transfered_files=["file1", "file2"]
         ),
-        Boat(
+        Floater(
             id="rsu19",
-            status="idle",
             mac="00:00:00:00:00:00",
-            speed=0,
-            direction=0,
+            status="idle",
             location=Location(
                 id="rsu19",
-                x=22,
-                y=19,
+                x=23,
+                y=18
             ),
-            destination=Location(
-                id="rsu19",
-                x=17,
-                y=19
-            ),
-            neighbours=[
-                Neighbour(
-                    name="obu02",
-                    tq=10,
-                    mac="00:00:00:00:00:00",
-                    location=Location(
-                        id="obu02",
-                        x=1,
-                        y=1,
-                    ),
-                    last_seen=400,
-                ),
-                Neighbour(
-                    name="obu10",
-                    tq=10,
-                    mac="00:00:00:00:00:00",
-                    location=Location(
-                        id="obu10",
-                        x=1,
-                        y=1,
+            files_to_tranfer=["file1", "file2"]
+        )
 
-                    ),
-                    last_seen=1607,
-                )
-            ],
-            transfered_files=["file1", "file2"]
-        ),
+
     ]
 
     for m in msgs:

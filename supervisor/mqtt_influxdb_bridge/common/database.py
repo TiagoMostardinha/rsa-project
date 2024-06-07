@@ -3,6 +3,7 @@ from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 from models.Boat import Boat
 from models.Message import Message
+from models.Floater import Floater
 import logging
 import json
 
@@ -82,15 +83,45 @@ class Database:
             source="InfluxDB",
         ))
 
+    def writeFloater(self, topic, data):
+        write_api = self.client.write_api(write_options=SYNCHRONOUS)
+
+        obj = Floater.fromJSON(data)
+
+        point = (
+            Point("floater")
+            .tag("id", obj.id)
+            .field("mac", obj.mac)
+            .field("status", obj.status)
+            .field("location_id", obj.location.id)
+            .field("location_x", obj.location.x)
+            .field("location_y", obj.location.y)
+            .field("files_to_tranfer", json.dumps(data["files_to_tranfer"]))
+        )
+
+        bucket = topic.split("/")[0]
+        write_api.write(bucket=bucket, org=self.org, record=point)
+
+        self.logger.info(msg=Message(
+            content=f'Message written in Bucket {bucket}: {data}',
+            source="InfluxDB",
+        ))
+
     def query(self, query):
         query_api = self.client.query_api()
         tables = query_api.query(org=self.org, query=query)
         return tables
 
-    def queryDevices(self, interval):
+    def queryBoat(self, interval):
         queryTemplate = f"""from(bucket: "devices")
         |> range(start: -{interval}m, stop: now())
-        |> filter(fn: (r) => r["id"] =~ /rsu|obu/)"""
+        |> filter(fn: (r) => r["id"] =~ /obu/)"""
+        return self.query(queryTemplate)
+    
+    def queryFloater(self, interval):
+        queryTemplate = f"""from(bucket: "devices")
+        |> range(start: -{interval}m, stop: now())
+        |> filter(fn: (r) => r["id"] =~ /rsu/)"""
         return self.query(queryTemplate)
 
     def queryController(self, interval):

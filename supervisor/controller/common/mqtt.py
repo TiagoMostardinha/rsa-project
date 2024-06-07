@@ -99,7 +99,7 @@ class MQTTPublisher(MQTT):
                 errorVar='rc',
                 errorCode=500,
             ))
-            #exit(-1)
+            exit(-1)
 
 
 class MQTTSubscriber(MQTT):
@@ -121,7 +121,7 @@ class MQTTSubscriber(MQTT):
                 global messages
 
                 data = msg.payload.decode("utf-8")
-
+                
                 m_decode = json.loads(data)
 
                 self.messages[msg.topic].append(m_decode)

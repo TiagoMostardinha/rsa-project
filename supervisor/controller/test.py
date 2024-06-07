@@ -29,15 +29,10 @@ def main(hostInfluxDB, portInfluxDB, orgInfluxDB, tokenInfluxDB):
             typeOfMessage="start",
             inRange=None,
         ),
-        ControllerMessage(
-            typeOfMessage="stop",
-            inRange=None,
-        ),
-        ControllerMessage(
-            typeOfMessage="inrange",
-            inRange=["rsu19","obu02"],
-        ),
-        
+        # ControllerMessage(
+        #     typeOfMessage="stop",
+        #     inRange=None,
+        # ),        
     ]
 
     for m in msgs:

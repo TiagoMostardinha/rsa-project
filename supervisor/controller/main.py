@@ -8,6 +8,7 @@ from common.database import Database
 import common.utils as utils
 from models.ControllerMessage import ControllerMessage
 from models.Boat import Boat
+from models.Floater import Floater
 
 
 def main(ipBroker, portBroker, usernameBroker, passwordBroker, hostInfluxDB, portInfluxDB, orgInfluxDB, tokenInfluxDB):
@@ -91,23 +92,27 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, hostInfluxDB, por
                 devices[msg.id]["device"] = msg
                 if "obu" in msg.id:
                     map[msg.location.y][msg.location.x] = "b"
+
+            if isinstance(msg, Floater):
+                if devices[msg.id]["device"] != None:
+                    map[devices[msg.id]["device"].location.y][devices[msg.id]
+                                                              ["device"].location.x] = "o"
+                devices[msg.id]["device"] = msg
                 if "rsu" in msg.id:
                     map[msg.location.y][msg.location.x] = "f"
-
             if isinstance(msg, ControllerMessage):
                 pub.connect()
                 if msg.typeOfMessage == "start":
                     for dev in devices.keys():
                         pub.publish(devices[dev]
-                            ["topic"], msg.__json__())
+                                    ["topic"], msg.__json__())
                 if msg.typeOfMessage == "stop":
                     for dev in devices.values():
                         pub.publish(dev["topic"], msg.__json__())
                 pub.disconnect()
 
-
         for id, dev in devices.items():
-                
+
             if "rsu" not in id or not dev["device"] or dev["device"].location.x < 0 or dev["device"].location.y < 0:
                 continue
             for i, d in devices.items():
@@ -117,13 +122,12 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, hostInfluxDB, por
                         or abs(dev["device"].location.y - d["device"].location.y) <= rangeOfDevices):
                     controllerMsg = ControllerMessage(
                         typeOfMessage="inrange",
-                        inRange=[id,i],
+                        inRange=[id, i],
                     )
                     pub.connect()
-                    pub.publish(dev["topic"],controllerMsg.__json__())
-                    pub.publish(d["topic"],controllerMsg.__json__())
+                    pub.publish(dev["topic"], controllerMsg.__json__())
+                    pub.publish(d["topic"], controllerMsg.__json__())
                     pub.disconnect()
-                    
 
         time.sleep(1)
 

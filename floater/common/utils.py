@@ -2,24 +2,29 @@ import json
 from models.ControllerMessage import ControllerMessage
 from models.Location import Location
 from models.Boat import Boat
+from models.Floater import Floater
 
 
-def getNewMessages(lastMessages,database):
+def getNewMessages(lastMessages, database):
     # Get All messages from 20min interval
     controllerMsgs = database.queryController(20)
-    devicesMessages = database.queryDevices(20)
+    boatMessages = database.queryBoat(20)
+    floaterMessages = database.queryFloater(20)
 
     newMsgs = []
 
     controllerMsgs, lastMessages = getControllerMessages(
         controllerMsgs, lastMessages)
-    devicesMsgs, lastMessages = getDevicesMessages(
-        devicesMessages, lastMessages)
+    boatMessages, lastMessages = getBoatMessages(
+        boatMessages, lastMessages)
+    floaterMessages, lastMessages = getFloaterMessages(
+        floaterMessages, lastMessages)
 
     newMsgs.extend(controllerMsgs)
-    newMsgs.extend(devicesMsgs)
+    newMsgs.extend(boatMessages)
+    newMsgs.extend(floaterMessages)
 
-    return newMsgs,lastMessages
+    return newMsgs, lastMessages
 
 
 def getControllerMessages(queryMsg, lastMessages):
@@ -45,27 +50,6 @@ def getControllerMessages(queryMsg, lastMessages):
 
     for msg in newMsgs:
 
-        if str(msg['startLocation']) == 'null':
-            startLocation = None
-
-        else:
-            aux = json.loads(msg['startLocation'])
-            startLocation = Location(
-                aux['id'],
-                aux['x'],
-                aux['y']
-            )
-
-        if str(msg['destLocation']) == 'null':
-            destLocation = None
-        else:
-            aux = json.loads(msg['destLocation'])
-            destLocation = Location(
-                aux['id'],
-                aux['x'],
-                aux['y']
-            )
-
         if str(msg['inRange']) == 'null':
             inRange = None
         else:
@@ -73,18 +57,14 @@ def getControllerMessages(queryMsg, lastMessages):
 
         controllerMsg = ControllerMessage(
             typeOfMessage=msg['typeOfMessage'],
-            startFlag=msg['startFlag'],
-            startLocation=startLocation,
-            destLocation=destLocation,
             inRange=inRange,
-            stopFlag=msg['stopFlag'],
         )
         msgsToReturn.append(controllerMsg)
 
     return msgsToReturn, lastMessages
 
 
-def getDevicesMessages(queryMsg, lastMessages):
+def getBoatMessages(queryMsg, lastMessages):
     receivedMsgs = {}
 
     # Since influxdb query columns of value. it is needed to transform a column of values to a message in a row
@@ -109,6 +89,7 @@ def getDevicesMessages(queryMsg, lastMessages):
     for msg in newMsgs:
         boatMsg = {
             "id": msg['id'],
+            "mac": msg['mac'],
             "status": msg['status'],
             "speed": msg['speed'],
             "direction": msg['direction'],
@@ -130,3 +111,42 @@ def getDevicesMessages(queryMsg, lastMessages):
 
     return msgsToReturn, lastMessages
 
+
+def getFloaterMessages(queryMsg, lastMessages):
+    receivedMsgs = {}
+
+    # Since influxdb query columns of value. it is needed to transform a column of values to a message in a row
+    for record in queryMsg:
+        for i in range(len(record.records)):
+            timer = str(record.records[i]["_time"])
+            if timer not in receivedMsgs:
+                receivedMsgs[timer] = {}
+            receivedMsgs[timer][record.records[i]
+                                ["_field"]] = record.records[i]["_value"]
+            receivedMsgs[timer]['id'] = record.records[i]["id"]
+
+    newMsgs = []
+
+    for timer, msg in receivedMsgs.items():
+        if (timer, msg) not in lastMessages:
+            newMsgs.append(msg)
+            lastMessages.append((timer, msg))
+
+    msgsToReturn = []
+
+    for msg in newMsgs:
+        floaterMsg = {
+            "id": msg['id'],
+            "mac": msg['mac'],
+            "status": msg['status'],
+            "location": {
+                "id": msg['location_id'],
+                "x": msg['location_x'],
+                "y": msg['location_y'],
+            },
+            "files_to_tranfer": json.loads(msg['files_to_tranfer'])
+        }
+        floaterMsg = Floater.fromJSON(floaterMsg)
+        msgsToReturn.append(floaterMsg)
+
+    return msgsToReturn, lastMessages

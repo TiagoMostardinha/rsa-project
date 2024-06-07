@@ -45,27 +45,6 @@ def getControllerMessages(queryMsg, lastMessages):
 
     for msg in newMsgs:
 
-        if str(msg['startLocation']) == 'null':
-            startLocation = None
-
-        else:
-            aux = json.loads(msg['startLocation'])
-            startLocation = Location(
-                aux['id'],
-                aux['x'],
-                aux['y']
-            )
-
-        if str(msg['destLocation']) == 'null':
-            destLocation = None
-        else:
-            aux = json.loads(msg['destLocation'])
-            destLocation = Location(
-                aux['id'],
-                aux['x'],
-                aux['y']
-            )
-
         if str(msg['inRange']) == 'null':
             inRange = None
         else:
@@ -73,11 +52,7 @@ def getControllerMessages(queryMsg, lastMessages):
 
         controllerMsg = ControllerMessage(
             typeOfMessage=msg['typeOfMessage'],
-            startFlag=msg['startFlag'],
-            startLocation=startLocation,
-            destLocation=destLocation,
             inRange=inRange,
-            stopFlag=msg['stopFlag'],
         )
         msgsToReturn.append(controllerMsg)
 

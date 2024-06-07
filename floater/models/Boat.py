@@ -4,6 +4,7 @@ from models.Neighbour import Neighbour
 
 class Boat:
     id: str
+    mac: str
     status: str
     speed: int
     direction: int
@@ -12,8 +13,9 @@ class Boat:
     neighbours: list
     transfered_files: list[str]
 
-    def __init__(self, id, status, speed, direction, location, neighbours, destination, transfered_files):
+    def __init__(self, id,mac, status, speed, direction, location, neighbours, destination, transfered_files):
         self.id = id
+        self.mac = mac
         self.status = status
         self.speed = speed
         self.direction = direction
@@ -23,11 +25,26 @@ class Boat:
         self.transfered_files = transfered_files
 
     def toJSON(self) -> dict:
-        neighbours = None
-        if self.neighbours is not None:
-            neighbours = [
+        return {
+            "id": self.id,
+            "mac": self.mac,
+            "status": self.status,
+            "speed": self.speed,
+            "direction": self.direction,
+            "location": {
+                "id": self.location.id,
+                "x": self.location.x,
+                "y": self.location.y
+            } if self.location else "",
+            "destination": {
+                "id": self.destination.id,
+                "x": self.destination.x,
+                "y": self.destination.y
+            }if self.destination else "",
+            "neighbours": [
                 {
                     "name": n.name,
+                    "mac": n.mac,
                     "tq": n.tq,
                     "location": {
                         "id": n.location.id,
@@ -36,36 +53,16 @@ class Boat:
                     },
                     "last_seen": n.last_seen
                 } for n in self.neighbours
-            ]
-        
-        transfered_files = None
-        if self.transfered_files is not None:
-            transfered_files = [
+            ],
+            "transfered_files": [
                 f for f in self.transfered_files
-            ]
-
-        return {
-            "id": self.id,
-            "status": self.status,
-            "speed": self.speed,
-            "direction": self.direction,
-            "location": {
-                "id": self.location.id,
-                "x": self.location.x,
-                "y": self.location.y
-            },
-            "destination": {
-                "id": self.destination.id,
-                "x": self.destination.x,
-                "y": self.destination.y
-            },
-            "neighbours": neighbours,
-            "transfered_files": transfered_files
+            ] 
         }
 
     def fromJSON(message):
         return Boat(
             id=message["id"],
+            mac=message["mac"],
             status=message["status"],
             speed=message["speed"],
             direction=message["direction"],
@@ -82,6 +79,7 @@ class Boat:
             neighbours=[
                 Neighbour(
                     name=n["name"],
+                    mac=n["mac"],
                     tq=n["tq"],
                     location=Location(
                         id=n["location"]["id"],
