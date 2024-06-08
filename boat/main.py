@@ -11,7 +11,9 @@ from common.dijkstra import *
 from models.Location import Location
 from common.batman import Batman
 import time
+from scapy.all import get_if_hwaddr
 import csv
+from common.socketAPI import SocketAPI
 
 
 def csvToMap(file):
@@ -34,15 +36,15 @@ def csvToMap(file):
     return map, freeSpace
 
 
-def main(ipBroker, portBroker, usernameBroker, passwordBroker):
+def main(ipBroker, portBroker, usernameBroker, passwordBroker, host_id):
     boat = Boat(
-        id="obu02",
+        id=host_id,
         mac="",
         status="idle",
         speed=0,
         direction=0,
         location=Location(
-            id="obu02",
+            id="host_id",
             x=-1,
             y=-1
         ),
@@ -80,8 +82,11 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker):
         logger=logging.getLogger(__name__)
     )
 
+    boat.mac = get_if_hwaddr("bat0")
+
     # Read Map
     map, freeSpace = csvToMap("map.csv")
+    graph = mapToGraph(map)
 
     # Read and create the topics for MQTT
     topics = {}
@@ -93,85 +98,84 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker):
         csv_reader = csv.reader(devices, delimiter=",")
         for row in csv_reader:
             if row[0] == boat.id:
-                boat.location.x = int(row[2])
-                boat.location.y = int(row[3])
+                boat.location.id = row[0]
+                boat.location.x = int(row[1])
+                boat.location.y = int(row[2])
+                boat.destination.id = row[3]
                 boat.destination.x = int(row[4])
                 boat.destination.y = int(row[5])
 
-
-    # TODO: get mac from batman
-
     sub.connect()
-    sub.subscribe(topics["in"])
+    sub.subscribe(topics["in"][0])
 
     startFlag = False
     inRange = False
-    startPosition = (boat.location.x,boat.location.y)
+    stopFlag = False
+    startPosition = (boat.location.x, boat.location.y)
 
     path = []
 
-    i = 0
+    lastMessage = None
 
     while True:
-        time.sleep(1)
 
+        msg = sub.popMessages(topics["in"][0])
 
-        if i > 10:
-            sub.disconnect()
-            pub.connect()
-            pub.publish(topics["out"][0], boat.toJSON())
-            pub.disconnect()
-            sub.connect()
-            i = 0
+        if msg is None:
             continue
-        else:
-            i += 1
 
-        for topic in topics["in"]:
-            msg = sub.popMessages(topic)
+        if msg["typeOfMessage"] == "start":
+            boat.status = "moving"
+            startFlag = True
 
-            if msg:
-                if msg['typeOfMessage'] == "start":
-                    startFlag = True
-                    boat.status = "moving"
-                    startPosition = (boat.location.x, boat.location.y)
-                    graph = mapToGraph(map)
-                    path = shortestPath(n=freeSpace, edges=graph, src=(
-                        boat.location.y, boat.location.x), target=(boat.destination.y, boat.destination.x))
-                if msg['typeOfMessage'] == "stop":
-                    startFlag = False
-                    boat.status = "idle"
-                    path = []
-                if msg['typeOfMessage'] == "inRange":
-                    if boat.id in msg['inrange']:
-                        inRange = True
-                        path = shortestPath(n=freeSpace, edges=graph, src=(
-                            startPosition[1], startPosition[0]), target=(
-                            boat.location.y, boat.location.x))
+        if msg["typeOfMessage"] == "stop":
+            boat.status = "end"
+            stopFlag = True
+
+        if msg["typeOfMessage"] == "inrange":
+            boat.status = "exchange"
+            inRange = True
+
+        time.sleep(1)
+        pub.connect()
+        pub.publish(topics["out"][0], boat.toJSON())
+        pub.disconnect()
 
         if not startFlag:
             continue
 
+        if stopFlag:
+            return
+
+        if inRange:
+            if msg != lastMessage:
+
+                socket = SocketAPI(10119, '10.1.1.10',
+                                   logging.getLogger(__name__))
+                boat.transfered_files = socket.clientSocket()
+                inRange = False
+                boat.status = "idle"
+                boat.destination.x = startPosition[0]
+                boat.destination.y = startPosition[1]
+                path = []
+                lastMessage = msg
+
         if len(path) <= 0:
-            continue
+            path = shortestPath(n=freeSpace, edges=graph, src=(
+                boat.location.y, boat.location.x), target=(boat.destination.y, boat.destination.x))
 
         coord = path.pop(0)
         boat.location.x = coord[1]
         boat.location.y = coord[0]
 
-        logging.info(
-            f"Boat {boat.id} is at {boat.location.x}, {boat.location.y}")
-
-        if not inRange:
-            continue
-        
-        # TODO: open socket with rsu
+        # TODO: exhange location between boats and update graph
 
         # if tq < 210:
         # if tq > 240:
         # if tq < 200: find new path
 
-        logging.info("In range")
+        logging.info(
+            f"Boat[{boat.id}]=({boat.location.x}, {boat.location.y})")
 
 
 if __name__ == "__main__":
@@ -182,9 +186,11 @@ if __name__ == "__main__":
     portBroker = int(os.getenv("PORT_BROKER"))
     usernameBroker = os.getenv("USERNAME_BROKER")
     passwordBroker = os.getenv("PASSWORD_BROKER")
+    host_id = os.getenv("HOST_ID")
 
     main(hostBroker,
          portBroker,
          usernameBroker,
          passwordBroker,
+         host_id
          )

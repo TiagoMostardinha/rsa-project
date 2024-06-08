@@ -102,7 +102,6 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, host_id):
             continue
 
         if inRange:
-            logging.info("Sending files to the server")
             socket = SocketAPI(10119, '', logging.getLogger(__name__))
             socket.socketServer(floater.files_to_tranfer)
             inRange = False

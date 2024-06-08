@@ -86,15 +86,15 @@ class MQTTPublisher(MQTT):
             rs = self.client.publish(topic, message)
 
             if rs[0] != 0:
-                raise Exception(f"Couldn't publish message on MQTT Broker : {rs[0]}")
+                raise Exception("Couldn't publish message on MQTT Broker")
 
             self.logger.info(msg=Message(
                 content=f'Message published on {topic}: {message}',
                 source='MQTT'
             ))
-        except Exception as e: 
+        except Exception:
             self.logger.error(msg=ErrorMessage(
-                content=f'Couldnt publish message on {topic}: {e}',
+                content=f'Couldnt publish message on {topic}: {message}',
                 source='MQTT',
                 errorVar='rc',
                 errorCode=500,
@@ -121,7 +121,7 @@ class MQTTSubscriber(MQTT):
                 global messages
 
                 data = msg.payload.decode("utf-8")
-
+                
                 m_decode = json.loads(data)
 
                 self.messages[msg.topic].append(m_decode)
@@ -139,7 +139,6 @@ class MQTTSubscriber(MQTT):
         self.client.on_message = on_message
 
         for topic in topics:
-            logging.info(topic)
             self.client.subscribe((topic, 0))
             self.messages[topic] = []
 
