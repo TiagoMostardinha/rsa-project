@@ -10,10 +10,12 @@ from models.Boat import Boat
 from common.dijkstra import *
 from models.Location import Location
 from common.batman import Batman
+import threading
 import time
 from scapy.all import get_if_hwaddr
 import csv
 from common.socketAPI import SocketAPI
+from models.Neighbour import Neighbour
 
 
 def csvToMap(file):
@@ -169,6 +171,29 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, host_id):
         boat.location.y = coord[0]
 
         # TODO: exhange location between boats and update graph
+
+        def send_location_data(boat):
+            socket = SocketAPI(10110, '', logging.getLogger(__name__))
+            socket.locationServerSocket(boat.id, boat.mac,
+                                        boat.location.x, boat.location.y)
+        thread = threading.Thread(
+            target=send_location_data, args=(boat))
+        thread.start()
+
+        socket = SocketAPI(10119, '10.1.1.2', logging.getLogger(__name__))
+        data = socket.locationClientSocket()
+
+        neighbour = Neighbour(
+            name=data["id"],
+            mac=data["mac"],
+            tq=-1,
+            location=Location(
+                id=data["id"],
+                x=data["x"],
+                y=data["y"]
+            ),
+            last_seen=-1
+        )
 
         # if tq < 210:
         # if tq > 240:

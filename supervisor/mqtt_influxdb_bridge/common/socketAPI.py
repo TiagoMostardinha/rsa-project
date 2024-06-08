@@ -1,10 +1,12 @@
 import socket
 import logging
+import json
+
 
 class SocketAPI():
-    port : int
-    ip : str
-    logger : logging.Logger
+    port: int
+    ip: str
+    logger: logging.Logger
 
     def __init__(self, port, ip, logger):
         self.port = port
@@ -20,7 +22,8 @@ class SocketAPI():
         filesSent = 0
         while True:
             clientsocket, address = s.accept()
-            self.logger.info(f"Connection from {address} has been established!")
+            self.logger.info(f"Connection from {
+                             address} has been established!")
 
             data = "".encode()
 
@@ -34,8 +37,7 @@ class SocketAPI():
                         data += newdata
                         filesSent += 1
                 data += "\0".encode()
-                
-            
+
             clientsocket.send(data)
             clientsocket.close()
 
@@ -57,9 +59,42 @@ class SocketAPI():
             else:
                 with open(f'files/{data[i-1]}', 'w') as f:
                     f.write(data[i])
-        
-
 
         s.close()
 
         return files
+
+    def locationServerSocket(self, id, mac, x, y):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.bind(('', self.port))
+        self.logger.info(f'Socket server binded to {self.port}')
+        s.listen(5)
+
+        while True:
+            clientsocket, address = s.accept()
+            self.logger.info(f"Connection from {
+                             address} has been established!")
+
+            data = json.dumps(
+                {
+                    "id": id,
+                    "mac": mac,
+                    "x": x,
+                    "y": y
+                }
+            ).encode()
+            clientsocket.send(data)
+            clientsocket.close()
+            s.close()
+            break
+
+    def locationClientSocket(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((self.ip, self.port))
+
+        data = s.recv(1024)
+        data = json.loads(data.decode())
+
+        s.close()
+
+        return data
