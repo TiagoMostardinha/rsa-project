@@ -65,7 +65,7 @@ class Database:
             point = (
                 Point("controller")
                 .field("typeOfMessage", data.get("typeOfMessage", ""))
-                .field("inRange", json.dumps(data.get("inRange", "")))
+                .field("inRange", json.dumps(data.get("inRange", "null")))
             )
 
         else:

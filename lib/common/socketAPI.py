@@ -22,8 +22,7 @@ class SocketAPI():
         filesSent = 0
         while True:
             clientsocket, address = s.accept()
-            self.logger.info(f"Connection from {
-                             address} has been established!")
+            self.logger.info(f"Connection from {address} has been established!")
 
             data = "".encode()
 
@@ -72,8 +71,7 @@ class SocketAPI():
 
         while True:
             clientsocket, address = s.accept()
-            self.logger.info(f"Connection from {
-                             address} has been established!")
+            self.logger.info(f"Connection from {address} has been established!")
 
             data = json.dumps(
                 {

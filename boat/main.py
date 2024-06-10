@@ -92,9 +92,10 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, host_id):
 
     # Read and create the topics for MQTT
     topics = {}
-
-    topics["in"] = [f'devices/{boat.id}/in']
-    topics["out"] = [f'devices/{boat.id}/out']
+    topics["in"] = []
+    topics["out"] = []
+    topics["in"].append(f'devices/{boat.id}/in')
+    topics["out"].append(f'devices/{boat.id}/out')
 
     with open("./devices.csv", "r") as devices:
         csv_reader = csv.reader(devices, delimiter=",")
@@ -108,7 +109,8 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, host_id):
                 boat.destination.y = int(row[5])
 
     sub.connect()
-    sub.subscribe(topics["in"][0])
+    sub.subscribe(topics["in"])
+    
 
     startFlag = False
     inRange = False
@@ -121,7 +123,7 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, host_id):
 
     while True:
 
-        msg = sub.popMessages(topics["in"][0])
+        msg = sub.popMessages(str(topics["in"][0]))
 
         if msg is None:
             continue
@@ -139,12 +141,13 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, host_id):
             inRange = True
 
         time.sleep(1)
-        pub.connect()
-        pub.publish(topics["out"][0], boat.toJSON())
-        pub.disconnect()
 
         if not startFlag:
             continue
+
+        pub.connect()
+        pub.publish(topics["out"][0], boat.toJSON())
+        pub.disconnect()
 
         if stopFlag:
             return
@@ -172,16 +175,22 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, host_id):
 
         # TODO: exhange location between boats and update graph
 
-        def send_location_data(boat):
-            socket = SocketAPI(10110, '', logging.getLogger(__name__))
-            socket.locationServerSocket(boat.id, boat.mac,
+        logging.info(
+            f"Boat[{boat.id}]=({boat.location.x}, {boat.location.y})")
+        
+
+        socketserver = SocketAPI(10110, '', logging.getLogger(__name__))
+
+        def send_location_data(boat,socketserver):
+            socketserver.locationServerSocket(boat.id, boat.mac,
                                         boat.location.x, boat.location.y)
+            
         thread = threading.Thread(
-            target=send_location_data, args=(boat))
+            target=send_location_data, args=(boat,socketserver))
         thread.start()
 
-        socket = SocketAPI(10119, '10.1.1.2', logging.getLogger(__name__))
-        data = socket.locationClientSocket()
+        socketclient = SocketAPI(10102, '10.1.1.2', logging.getLogger(__name__))
+        data = socketclient.locationClientSocket()
 
         neighbour = Neighbour(
             name=data["id"],
@@ -195,9 +204,23 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, host_id):
             last_seen=-1
         )
 
-        # if tq < 210:
-        # if tq > 240:
-        # if tq < 200: find new path
+        tq_neighbour = Batman().get_neighbours()
+
+        for n in tq_neighbour:
+            if n.mac == neighbour.mac:
+                neighbour.tq = n.tq
+                neighbour.last_seen = n.last_seen
+        
+        boat.neighbours.append(neighbour)
+
+        if neighbour.tq > 210:
+            boat.location.y += 0
+        if neighbour.tq > 240:
+            boat.location.y -= 0
+
+        if neighbour.tq < 200:
+            path = []
+        
 
         logging.info(
             f"Boat[{boat.id}]=({boat.location.x}, {boat.location.y})")

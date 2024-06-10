@@ -3,6 +3,7 @@ import paho.mqtt.client as mqtt
 from models.Message import *
 import logging
 import json
+import threading
 
 
 class MQTT:
@@ -121,7 +122,7 @@ class MQTTSubscriber(MQTT):
                 global messages
 
                 data = msg.payload.decode("utf-8")
-                
+
                 m_decode = json.loads(data)
 
                 self.messages[msg.topic].append(m_decode)
@@ -138,13 +139,19 @@ class MQTTSubscriber(MQTT):
 
         self.client.on_message = on_message
 
-        for topic in topics:
-            self.client.subscribe((topic, 0))
-            self.messages[topic] = []
+        if isinstance(topics, str):
+            self.client.subscribe((topics, 0))
+            self.messages[str(topics)] = []
+        else:
+            for topic in topics:
+                self.client.subscribe((topic, 0))
+                self.messages[str(topic)] = []
 
-        self.client.loop_start()
+        threading.Thread(target=self.client.loop_forever).start()
 
     def popMessages(self, topic):
+        if len(self.messages.keys()) == 0:
+            return None
         if len(self.messages[topic]) == 0:
             return None
         return self.messages[topic].pop()

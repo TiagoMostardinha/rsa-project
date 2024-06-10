@@ -3,6 +3,7 @@ from models.ControllerMessage import ControllerMessage
 from models.Location import Location
 from models.Boat import Boat
 from models.Floater import Floater
+import logging
 
 
 def getNewMessages(lastMessages, database):
@@ -49,6 +50,7 @@ def getControllerMessages(queryMsg, lastMessages):
     msgsToReturn = []
 
     for msg in newMsgs:
+        logging.info(f"Controller message: {msg}")
 
         if str(msg['inRange']) == 'null':
             inRange = None

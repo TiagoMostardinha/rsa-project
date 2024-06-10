@@ -16,33 +16,37 @@ cp map.csv boat/
 echo "Press any key to continue"
 read -n 1 -s
 
-echo "Supervisor"
-cd supervisor/
-docker compose down --remove-orphans
-docker image rm controller mqtt_influxdb_bridge
-docker build -t controller ./controller/
-docker build -t mqtt_influxdb_bridge ./mqtt_influxdb_bridge/
-docker compose up -d
+# echo "Supervisor"
+# cd supervisor/
+# docker compose down --remove-orphans
+# docker image rm controller mqtt_influxdb_bridge
+# docker build -t controller ./controller/
+# docker build -t mqtt_influxdb_bridge ./mqtt_influxdb_bridge/
+# docker compose up -d
+# cd ..
 
 mosquitto_ip_address=$(docker inspect -f '{{range .NetworkSettings.Networks}} {{.IPAddress}} {{end}}' mosquitto | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
 echo "Mosquitto IP: $mosquitto_ip_address"
+echo $mosquitto_ip_address > boat/mosquitto.txt
+
+sleep 5
+
+sudo route add -net 0.0.0.0 netmask 0.0.0.0 gw 192.168.2.2
+sudo route add -net 0.0.0.0 netmask 0.0.0.0 gw 192.168.19.19
 
 # FLOATER_IP=192.168.19.19
 # echo "Floater"
 # #scp -r ./floater/ nap@192.168.19.19:/home/nap/
-# sshpass -p "openlab" ssh nap@$FLOATER_IP './batman_installation/create_batman_interface.sh wlan0 10.1.1.19 ; sudo route add -net 172.30.0.0 netmask 255.255.0.0 gw 192.168.19.1 ; cd floater/ ; sed -i "s/HOST_BROKER=.*$/HOST_BROKER='$mosquitto_ip_address'/" .env ; source venv/bin/activate ;  python main.py ; ' &
 
-BOAT1_IP=192.168.3.10
+BOAT1_IP=192.168.19.19
 echo "BOAT1"
-#scp -r ./boat/ nap@192.168.3.10:/home/nap/
-sshpass -p "openlab" ssh nap@$BOAT1_IP './batman_installation/create_batman_interface.sh wlan0 10.1.1.10 ; sudo route add -net 172.30.0.0 netmask 255.255.0.0 gw 192.168.3.1 ; cd boat/ ; sed -i "s/HOST_BROKER=.*$/HOST_BROKER='$mosquitto_ip_address'/" .env ; source venv/bin/activate ;  python main.py ; ' &
+sshpass -p "openlab" scp -r boat/ nap@192.168.19.19:/home/nap
+#sshpass -p "openlab" ssh nap@$BOAT1_IP "cd /home/nap/boat ; source venv/bin/activate ; sh boat10.sh " &
 
 BOAT2_IP=192.168.2.2
 echo "BOAT2"
-#scp -r ./boat/ nap@192.168.2.2:/home/nap/
-sshpass -p "openlab" ssh nap@$BOAT2_IP './batman_installation/create_batman_interface.sh wlan0 10.1.1.2 ; sudo route add -net 172.30.0.0 netmask 255.255.0.0 gw 192.168.2.1 ; cd boat/ ; sed -i "s/HOST_BROKER=.*$/HOST_BROKER='$mosquitto_ip_address'/" .env ; source venv/bin/activate ;  python main.py ; ' &
-
-
+sshpass -p "openlab" scp -r boat/ nap@192.168.2.2:/home/nap
+#sshpass -p "openlab" ssh nap@$BOAT2_IP "cd /home/nap/boat ; source venv/bin/activate ; sh boat02.sh " &
 
 # sleep 5
 # echo "Testing"
