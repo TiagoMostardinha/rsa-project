@@ -10,7 +10,11 @@ from common.socketAPI import *
 from scapy.all import get_if_hwaddr
 import time
 import csv
+import paho.mqtt.client as mqtt
+import threading
 
+
+messages = {}
 
 def main(ipBroker, portBroker, usernameBroker, passwordBroker, host_id):
     floater = Floater(
@@ -61,8 +65,46 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, host_id):
                 floater.location.x = int(row[1])
                 floater.location.y = int(row[2])
 
-    sub.connect()
-    sub.subscribe(topics["in"])
+    def on_connect(client, userdata, flags, rc, properties):
+        print("Connected with result code " + str(rc))
+        client.subscribe(topics["in"][0])
+
+    def on_message(client, userdata, msg):
+        global messages
+        data = msg.payload.decode("utf-8")
+        logging.info(f"Message received: {data}")
+
+        m_decode = json.loads(data)
+
+        messages[msg.topic].append(m_decode)
+
+    
+
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+    client.username_pw_set(
+        username="admin",
+        password="admin"
+    )
+
+    client.on_connect = on_connect
+    client.on_message = on_message
+    client.connect(ipBroker, portBroker, 60)
+    threading.Thread(target=client.loop_forever).start()
+
+    if isinstance(topics["in"], str):
+        client.subscribe((topics, 0))
+        messages[str(topics)] = []
+    else:
+        for topic in topics["in"]:
+            client.subscribe((topic, 0))
+            messages[str(topic)] = []
+            
+    def popMessages(topic):
+        if len(messages.keys()) == 0:
+            return None
+        if len(messages[topic]) == 0:
+            return None
+        return messages[topic].pop()
 
     startFlag = False
     stopFlag = False
@@ -71,8 +113,7 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, host_id):
     lastMessage = None
 
     while True:
-        # TODO: get messages from MQTT
-        msg = sub.popMessages(topics["in"][0])
+        msg = popMessages(str(topics["in"][0]))
 
         if msg is None:
             continue

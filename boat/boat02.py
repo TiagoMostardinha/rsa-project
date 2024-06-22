@@ -148,14 +148,6 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, host_id):
         for topic in topics["in"]:
             client.subscribe((topic, 0))
             messages[str(topic)] = []
-            
-    def popMessages(topic):
-        if len(messages.keys()) == 0:
-            return None
-        if len(messages[topic]) == 0:
-            return None
-        return messages[topic].pop()
-
 
     startFlag = False
     inRange = False
@@ -166,7 +158,13 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, host_id):
 
     lastMessage = None
 
-    
+    def popMessages(topic):
+        if len(messages.keys()) == 0:
+            return None
+        if len(messages[topic]) == 0:
+            return None
+        return messages[topic].pop()
+
     while True:
 
         msg = popMessages(str(topics["in"][0]))
@@ -261,7 +259,6 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, host_id):
         #         neighbour.last_seen = n.last_seen
 
         #boat.neighbours.append(tq_neighbour)
-        logging.info(f"Neighbours:{tq_neighbour}")
 
         for n in tq_neighbour:
             if n.tq > 210:

@@ -28,11 +28,22 @@ read -n 1 -s
 mosquitto_ip_address=$(docker inspect -f '{{range .NetworkSettings.Networks}} {{.IPAddress}} {{end}}' mosquitto | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
 echo "Mosquitto IP: $mosquitto_ip_address"
 echo $mosquitto_ip_address > boat/mosquitto.txt
+echo $mosquitto_ip_address > floater/mosquitto.txt
 
 sleep 5
 
 sudo route add -net 0.0.0.0 netmask 0.0.0.0 gw 192.168.2.2
 sudo route add -net 0.0.0.0 netmask 0.0.0.0 gw 192.168.19.19
+sudo ip route add 172.30.0.0/16 via 192.168.2.1
+sudo ip route add 172.30.0.0/16 via 192.168.19.1
+sudo sysctl -p
+sudo iptables -A FORWARD -i enp0s25 -o docker0 -j ACCEPT
+sudo iptables -A FORWARD -i enx28ee5215abf8 -o docker0 -j ACCEPT
+sudo iptables -A FORWARD -i docker0 -o enp0s25 -j ACCEPT
+sudo iptables -A FORWARD -i docker0 -o enx28ee5215abf8 -j ACCEPT
+sudo iptables-save > /etc/iptables/rules.v4
+
+
 
 # FLOATER_IP=192.168.19.19
 # echo "Floater"

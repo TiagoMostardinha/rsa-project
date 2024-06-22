@@ -1,6 +1,7 @@
 import socket
 import logging
 import json
+import time
 
 
 class SocketAPI():
@@ -61,7 +62,6 @@ class SocketAPI():
                     f.write(data[i])
 
         s.close()
-
         return files
 
     def locationServerSocket(self, id, mac, x, y):
@@ -86,7 +86,7 @@ class SocketAPI():
             clientsocket.send(data)
             clientsocket.close()
             s.close()
-            break
+            time.sleep(1)
 
     def locationClientSocket(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -96,5 +96,5 @@ class SocketAPI():
         data = json.loads(data.decode())
 
         s.close()
-
+        time.sleep(1)
         return data

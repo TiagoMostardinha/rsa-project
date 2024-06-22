@@ -112,7 +112,6 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, hostInfluxDB, por
                 pub.disconnect()
 
         for id, dev in devices.items():
-
             if "rsu" not in id or not dev["device"] or dev["device"].location.x < 0 or dev["device"].location.y < 0:
                 continue
             for i, d in devices.items():

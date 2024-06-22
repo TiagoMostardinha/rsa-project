@@ -30,6 +30,8 @@ class Database:
 
     def writeBoat(self, topic, data):
         write_api = self.client.write_api(write_options=SYNCHRONOUS)
+        
+        logging.info(type(data))
 
         obj = Boat.fromJSON(data)
 

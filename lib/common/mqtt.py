@@ -5,6 +5,7 @@ import logging
 import json
 import threading
 
+messages = {}
 
 class MQTT:
     id: str
@@ -104,7 +105,6 @@ class MQTTPublisher(MQTT):
 
 
 class MQTTSubscriber(MQTT):
-    messages = {}
 
     def __init__(self, host: str, port: int, username: str, password: str, id: str, logger: logging.Logger):
         super().__init__(
@@ -125,7 +125,7 @@ class MQTTSubscriber(MQTT):
 
                 m_decode = json.loads(data)
 
-                self.messages[msg.topic].append(m_decode)
+                messages[msg.topic].append(m_decode)
 
                 self.logger.info(msg=Message(
                     content=f'Message received on {msg.topic}: {msg.payload}',
@@ -137,21 +137,21 @@ class MQTTSubscriber(MQTT):
                     source='MQTT',
                 ))
 
-        self.client.on_message = on_message
 
         if isinstance(topics, str):
             self.client.subscribe((topics, 0))
-            self.messages[str(topics)] = []
+            messages[str(topics)] = []
         else:
             for topic in topics:
                 self.client.subscribe((topic, 0))
-                self.messages[str(topic)] = []
+                messages[str(topic)] = []
 
-        threading.Thread(target=self.client.loop_forever).start()
+        self.client.on_message = on_message
+        threading.Thread(target=self.client.loop_forever()).start()
 
     def popMessages(self, topic):
-        if len(self.messages.keys()) == 0:
+        if len(messages.keys()) == 0:
             return None
-        if len(self.messages[topic]) == 0:
+        if len(messages[topic]) == 0:
             return None
-        return self.messages[topic].pop()
+        return messages[topic].pop()

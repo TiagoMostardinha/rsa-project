@@ -127,7 +127,7 @@ class MQTTSubscriber(MQTT):
                 self.messages[msg.topic].append(m_decode)
 
                 self.logger.info(msg=Message(
-                    content=f'Message received on {msg.topic}: {msg.payload}',
+                    content=f'Message received on {msg.topic}: {m_decode}',
                     source='MQTT'
                 ))
             except Exception:

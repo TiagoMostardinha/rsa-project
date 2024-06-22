@@ -37,7 +37,6 @@ class Batman():
             print()
 
     def get_neighbours(self):
-        devices = self.get_devices_map()
         try:
             command = ["sudo", "batctl", "oj"]
             completed_process = subprocess.run(

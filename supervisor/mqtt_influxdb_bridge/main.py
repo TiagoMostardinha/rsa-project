@@ -55,6 +55,7 @@ def main(ipBroker, portBroker, usernameBroker, passwordBroker, hostInfluxDB, por
                 try:
                     db.writeBoat(topic, msg)
                 except Exception as e:
+                    logging.info(e)
                     db.writeFloater(topic, msg)
 
     sub.disconnect()
